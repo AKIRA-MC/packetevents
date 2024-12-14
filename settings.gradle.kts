@@ -30,9 +30,6 @@ include("api")
 include("netty-common")
 // Platform modules
 include("spigot")
-include("bungeecord")
 include("velocity")
-include("sponge")
-include("fabric")
 // Patch modules
 include(":patch:adventure-text-serializer-gson")
