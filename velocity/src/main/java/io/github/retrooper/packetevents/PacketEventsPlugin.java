@@ -93,11 +93,6 @@ public class PacketEventsPlugin {
         //PacketEvents.getAPI().getEventManager().registerListener(listener);
         PacketEvents.getAPI().init();
 
-        // Enable bStats
-        Metrics metrics = metricsFactory.make(this, 11327);
-        //Just to have an idea of which versions of packetevents people use
-        metrics.addCustomChart(new SimplePie("packetevents_version", () -> PacketEvents.getAPI().getVersion().toStringWithoutSnapshot()));
-
         logger.info("Plugin started");
     }
 
