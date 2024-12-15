@@ -22,7 +22,7 @@ fun getVersionMeta(includeHash: Boolean): String {
     }
     return "$commitHash-SNAPSHOT"
 }
-version = "$fullVersion${getVersionMeta(true)}"
+version = fullVersion
 ext["versionNoHash"] = "$fullVersion${getVersionMeta(false)}"
 
 tasks {

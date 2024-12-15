@@ -149,11 +149,3 @@ tasks {
         }
     }
 }
-
-publishing {
-    publications {
-        named<MavenPublication>("shadow") {
-            artifact(tasks["javadocJar"])
-        }
-    }
-}
