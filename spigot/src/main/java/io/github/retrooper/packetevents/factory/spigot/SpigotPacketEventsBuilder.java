@@ -30,6 +30,7 @@ import com.github.retrooper.packetevents.protocol.player.User;
 import com.github.retrooper.packetevents.protocol.world.states.WrappedBlockState;
 import com.github.retrooper.packetevents.settings.PacketEventsSettings;
 import com.github.retrooper.packetevents.util.LogManager;
+import io.github.retrooper.packetevents.bukkit.InternalBukkitListener;
 import io.github.retrooper.packetevents.injector.SpigotChannelInjector;
 import io.github.retrooper.packetevents.injector.connection.ServerConnectionInitializer;
 import io.github.retrooper.packetevents.manager.InternalBukkitPacketListener;
@@ -137,6 +138,8 @@ public class SpigotPacketEventsBuilder {
                     if (settings.shouldCheckForUpdates()) {
                         getUpdateChecker().handleUpdateCheck();
                     }
+
+                    Bukkit.getPluginManager().registerEvents(new InternalBukkitListener(plugin), plugin);
 
                     if (lateBind) {
                         //If late-bind is enabled, we still need to inject (after all plugins enabled).
