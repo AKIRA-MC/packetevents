@@ -23,6 +23,7 @@ import com.github.retrooper.packetevents.protocol.mapper.MappedEntitySet;
 import com.github.retrooper.packetevents.protocol.world.biome.Biome;
 import com.github.retrooper.packetevents.resources.ResourceLocation;
 import com.github.retrooper.packetevents.util.mappings.TypesBuilderData;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -34,6 +35,10 @@ public class StaticWolfVariant extends AbstractMappedEntity implements WolfVaria
     private final ResourceLocation angryTexture;
     private final MappedEntitySet<Biome> biomes;
 
+    /**
+     * The biome set has been removed with 1.21.5
+     */
+    @ApiStatus.Obsolete
     public StaticWolfVariant(
             ResourceLocation wildTexture,
             ResourceLocation tameTexture,
@@ -43,6 +48,16 @@ public class StaticWolfVariant extends AbstractMappedEntity implements WolfVaria
         this(null, wildTexture, tameTexture, angryTexture, biomes);
     }
 
+    public StaticWolfVariant(
+            ResourceLocation angryTexture,
+            ResourceLocation tameTexture,
+            ResourceLocation wildTexture
+    ) {
+        this(null, angryTexture, tameTexture,
+                wildTexture, MappedEntitySet.createEmpty());
+    }
+
+    @ApiStatus.Internal
     public StaticWolfVariant(
             @Nullable TypesBuilderData data,
             ResourceLocation wildTexture,

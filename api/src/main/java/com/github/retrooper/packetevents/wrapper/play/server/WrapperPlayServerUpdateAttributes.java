@@ -106,6 +106,9 @@ public class WrapperPlayServerUpdateAttributes extends PacketWrapper<WrapperPlay
                 String attributeName = this.readString(64);
                 attribute = PRE_1_16_ATTRIBUTES_MAP.get(attributeName);
                 if (attribute == null) {
+                    attribute = Attributes.getByName(attributeName);
+                }
+                if (attribute == null) {
                     throw new IllegalStateException("Can't find attribute for name " + attributeName
                             + " (version: " + this.serverVersion.name() + ")");
                 }
@@ -158,7 +161,9 @@ public class WrapperPlayServerUpdateAttributes extends PacketWrapper<WrapperPlay
             } else if (this.serverVersion.isNewerThanOrEquals(ServerVersion.V_1_16)) {
                 this.writeIdentifier(property.getAttribute().getName(this.serverVersion.toClientVersion()));
             } else {
-                this.writeString(PRE_1_16_ATTRIBUTES_RMAP.get(property.getAttribute()));
+                // just write the "modern" name if the legacy name can't be found
+                String str = PRE_1_16_ATTRIBUTES_RMAP.get(property.getAttribute());
+                this.writeString(str != null ? str : property.getAttribute().getName().toString());
             }
 
             writeDouble(property.value);

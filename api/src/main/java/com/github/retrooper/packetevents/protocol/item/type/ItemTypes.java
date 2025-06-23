@@ -18,12 +18,13 @@
 
 package com.github.retrooper.packetevents.protocol.item.type;
 
+import com.github.retrooper.packetevents.netty.buffer.ByteBufHelper;
 import com.github.retrooper.packetevents.netty.buffer.UnpooledByteBufAllocationHelper;
 import com.github.retrooper.packetevents.protocol.component.ComponentType;
 import com.github.retrooper.packetevents.protocol.component.ComponentTypes;
 import com.github.retrooper.packetevents.protocol.component.StaticComponentMap;
 import com.github.retrooper.packetevents.protocol.nbt.NBT;
-import com.github.retrooper.packetevents.protocol.nbt.NBTString;
+import com.github.retrooper.packetevents.protocol.nbt.NBTByteArray;
 import com.github.retrooper.packetevents.protocol.nbt.serializer.SequentialNBTReader;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.protocol.world.states.type.StateType;
@@ -32,11 +33,11 @@ import com.github.retrooper.packetevents.resources.ResourceLocation;
 import com.github.retrooper.packetevents.util.mappings.MappingHelper;
 import com.github.retrooper.packetevents.util.mappings.VersionedRegistry;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,10 +47,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ItemTypes {
+public final class ItemTypes {
 
-    private static final VersionedRegistry<ItemType> REGISTRY = new VersionedRegistry<>(
-            "item", "item/item_type_mappings");
+    private static final VersionedRegistry<ItemType> REGISTRY = new VersionedRegistry<>("item");
     private static final Map<StateType, ItemType> HELD_TO_PLACED_MAP = new HashMap<>();
 
     // <editor-fold desc="item type definitions" defaultstate="collapsed">
@@ -536,6 +536,8 @@ public class ItemTypes {
     public static final ItemType QUARTZ_STAIRS = builder("quartz_stairs").setMaxAmount(64).setPlacedType(StateTypes.QUARTZ_STAIRS).build();
     public static final ItemType RAIL = builder("rail").setMaxAmount(64).setPlacedType(StateTypes.RAIL).build();
     public static final ItemType WHITE_BANNER = builder("white_banner").setMaxAmount(16).setPlacedType(StateTypes.WHITE_BANNER).setAttributes(ItemAttribute.FUEL).build();
+    @ApiStatus.Obsolete
+    public static final ItemType WHITE_WALL_BANNER = builder("white_wall_banner").setMaxAmount(16).setPlacedType(StateTypes.WHITE_WALL_BANNER).setAttributes(ItemAttribute.FUEL).build();
     public static final ItemType MOSS_BLOCK = builder("moss_block").setMaxAmount(64).setPlacedType(StateTypes.MOSS_BLOCK).build();
     public static final ItemType BLUE_STAINED_GLASS = builder("blue_stained_glass").setMaxAmount(64).setPlacedType(StateTypes.BLUE_STAINED_GLASS).build();
     public static final ItemType GREEN_TERRACOTTA = builder("green_terracotta").setMaxAmount(64).setPlacedType(StateTypes.GREEN_TERRACOTTA).build();
@@ -1461,6 +1463,96 @@ public class ItemTypes {
     public static final ItemType CHISELED_RESIN_BRICKS = builder("chiseled_resin_bricks").setMaxAmount(64).setPlacedType(StateTypes.CHISELED_RESIN_BRICKS).build();
     public static final ItemType RESIN_BRICK = builder("resin_brick").setMaxAmount(64).build();
 
+    // 1.21.5 items
+    public static final ItemType BUSH = builder("bush").setMaxAmount(64).setPlacedType(StateTypes.BUSH).build();
+    public static final ItemType FIREFLY_BUSH = builder("firefly_bush").setMaxAmount(64).setPlacedType(StateTypes.FIREFLY_BUSH).build();
+    public static final ItemType SHORT_DRY_GRASS = builder("short_dry_grass").setMaxAmount(64).setPlacedType(StateTypes.SHORT_DRY_GRASS).setAttributes(ItemAttribute.FUEL).build();
+    public static final ItemType TALL_DRY_GRASS = builder("tall_dry_grass").setMaxAmount(64).setPlacedType(StateTypes.TALL_DRY_GRASS).setAttributes(ItemAttribute.FUEL).build();
+    public static final ItemType WILDFLOWERS = builder("wildflowers").setMaxAmount(64).setPlacedType(StateTypes.WILDFLOWERS).build();
+    public static final ItemType LEAF_LITTER = builder("leaf_litter").setMaxAmount(64).setPlacedType(StateTypes.LEAF_LITTER).setAttributes(ItemAttribute.FUEL).build();
+    public static final ItemType CACTUS_FLOWER = builder("cactus_flower").setMaxAmount(64).setPlacedType(StateTypes.CACTUS_FLOWER).build();
+    public static final ItemType TEST_BLOCK = builder("test_block").setMaxAmount(64).setPlacedType(StateTypes.TEST_BLOCK).build();
+    public static final ItemType TEST_INSTANCE_BLOCK = builder("test_instance_block").setMaxAmount(64).setPlacedType(StateTypes.TEST_INSTANCE_BLOCK).build();
+    public static final ItemType BLUE_EGG = builder("blue_egg").setMaxAmount(16).build();
+    public static final ItemType BROWN_EGG = builder("brown_egg").setMaxAmount(16).build();
+
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType DRIED_GHAST = builder("dried_ghast").setMaxAmount(64).setPlacedType(StateTypes.DRIED_GHAST).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType WHITE_HARNESS = builder("white_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType ORANGE_HARNESS = builder("orange_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType MAGENTA_HARNESS = builder("magenta_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType LIGHT_BLUE_HARNESS = builder("light_blue_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType YELLOW_HARNESS = builder("yellow_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType LIME_HARNESS = builder("lime_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType PINK_HARNESS = builder("pink_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType GRAY_HARNESS = builder("gray_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType LIGHT_GRAY_HARNESS = builder("light_gray_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType CYAN_HARNESS = builder("cyan_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType PURPLE_HARNESS = builder("purple_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType BLUE_HARNESS = builder("blue_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType BROWN_HARNESS = builder("brown_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType GREEN_HARNESS = builder("green_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType RED_HARNESS = builder("red_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType BLACK_HARNESS = builder("black_harness").setMaxAmount(1).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType HAPPY_GHAST_SPAWN_EGG = builder("happy_ghast_spawn_egg").setMaxAmount(64).build();
+    /**
+     * Added with 1.21.6
+     */
+    public static final ItemType MUSIC_DISC_TEARS = builder("music_disc_tears").setMaxAmount(1).setAttributes(ItemAttribute.MUSIC_DISC).build();
+
     /**
      * @deprecated Burning furnace shows up as a missing texture, removed in 1.9
      */
@@ -1504,6 +1596,9 @@ public class ItemTypes {
 
     // </editor-fold>
 
+    private ItemTypes() {
+    }
+
     @SuppressWarnings("unchecked")
     private static StaticComponentMap.Builder parseComponents(
             ClientVersion version,
@@ -1514,51 +1609,81 @@ public class ItemTypes {
         if (base != null) {
             components.setAll(base);
         }
+        // allocate a buffer once and use it for parsing everything
+        Object byteBuf = UnpooledByteBufAllocationHelper.buffer();
+        PacketWrapper<?> wrapper = PacketWrapper.createUniversalPacketWrapper(byteBuf, version.toServerVersion());
+
         for (Map.Entry<String, NBT> entry : nbt) {
             ComponentType<?> compType = ComponentTypes.getByName(entry.getKey());
             if (compType == null) {
                 continue;
             }
-            byte[] encodedValue = Base64.getDecoder().decode(
-                    ((NBTString) entry.getValue()).getValue());
-            Object byteBuf = UnpooledByteBufAllocationHelper.wrappedBuffer(encodedValue);
-            PacketWrapper<?> wrapper = PacketWrapper.createUniversalPacketWrapper(byteBuf);
-            wrapper.setClientVersion(version);
-            wrapper.setServerVersion(version.toServerVersion());
 
+            // reset to start of buffer
+            ByteBufHelper.resetReaderIndex(byteBuf);
+            ByteBufHelper.resetWriterIndex(byteBuf);
+
+            // empty values are serialized as a single byte (smaller than an empty byte array),
+            // so just parse byte array tag values
+            if (entry.getValue() instanceof NBTByteArray) {
+                // write bytes at beginning of buffer
+                byte[] bytes = ((NBTByteArray) entry.getValue()).getValue();
+                ByteBufHelper.writeBytes(byteBuf, bytes);
+            }
+
+            // read from shared buffer
             Object compValue = compType.read(wrapper);
             components.set((ComponentType<Object>) compType, compValue);
+
+            // ensure the entire component value has been read
+            int wi = ByteBufHelper.writerIndex(byteBuf);
+            int ri = ByteBufHelper.readerIndex(byteBuf);
+            if (wi != ri) {
+                throw new RuntimeException("Expected reader index (" + ri + ") to match writer index ("
+                        + wi + ") after reading component value for type " + compType.getName() + " in version " + version);
+            }
         }
+
+        ByteBufHelper.release(byteBuf);
         return components;
     }
 
-    static {
-        try (SequentialNBTReader.Compound compound = MappingHelper.decompress("mappings/item/item_base_components")) {
+    private static void parseAllComponents(ClientVersion version) {
+        String path = "mappings/item_base_components/" + version.name();
+        try (SequentialNBTReader.Compound compound = MappingHelper.decompress(path)) {
             compound.skipOne(); // skip version
-            for (Map.Entry<String, NBT> entry : compound) {
-                ClientVersion version = ClientVersion.valueOf(entry.getKey());
-                SequentialNBTReader.Compound items = (SequentialNBTReader.Compound) entry.getValue();
-                StaticComponentMap defaults = parseComponents(
-                        version, null, (SequentialNBTReader.Compound) items.next().getValue()).build();
+            SequentialNBTReader.Compound items = (SequentialNBTReader.Compound) compound.next().getValue();
+            StaticComponentMap defaults = parseComponents(
+                    version, null, (SequentialNBTReader.Compound) items.next().getValue()).build();
 
-                for (Map.Entry<String, NBT> item : items) {
-                    ItemType itemType = REGISTRY.getByName(new ResourceLocation(item.getKey()));
-                    if (!(itemType instanceof StaticItemType)) {
-                        ((SequentialNBTReader.Compound) item.getValue()).skip();
-                        continue; // somehow unknown item
-                    }
-                    StaticComponentMap.Builder components = parseComponents(version, defaults,
-                            (SequentialNBTReader.Compound) item.getValue());
-                    ((StaticItemType) itemType).setComponents(version, components.build());
+            for (Map.Entry<String, NBT> item : items) {
+                ItemType itemType = REGISTRY.getByName(new ResourceLocation(item.getKey()));
+                if (!(itemType instanceof StaticItemType)) {
+                    ((SequentialNBTReader.Compound) item.getValue()).skip();
+                    continue; // somehow unknown item
                 }
-                for (ItemType type : REGISTRY.getEntries()) {
-                    if (type instanceof StaticItemType && !((StaticItemType) type).hasComponents(version)) {
-                        ((StaticItemType) type).setComponents(version, defaults);
-                    }
+                StaticComponentMap.Builder components = parseComponents(version, defaults,
+                        (SequentialNBTReader.Compound) item.getValue());
+                ((StaticItemType) itemType).setComponents(version, components.build());
+            }
+            for (ItemType type : REGISTRY.getEntries()) {
+                if (type instanceof StaticItemType && !((StaticItemType) type).hasComponents(version)) {
+                    ((StaticItemType) type).setComponents(version, defaults);
                 }
             }
         } catch (IOException exception) {
             throw new RuntimeException("Error while parsing item base component data", exception);
+        }
+    }
+
+    static {
+        // all versions where base components were changed TODO UPDATE
+        ClientVersion[] versions = new ClientVersion[]{
+                ClientVersion.V_1_20_5, ClientVersion.V_1_21, ClientVersion.V_1_21_2,
+                ClientVersion.V_1_21_4, ClientVersion.V_1_21_5, ClientVersion.V_1_21_6,
+        };
+        for (ClientVersion version : versions) {
+            parseAllComponents(version);
         }
         for (ItemType type : REGISTRY.getEntries()) {
             if (type instanceof StaticItemType) {
@@ -1579,6 +1704,7 @@ public class ItemTypes {
         return new Builder(key.toLowerCase());
     }
 
+    @ApiStatus.Internal
     public static ItemType define(int maxAmount, String key, ItemType craftRemainder, StateType placedType, int maxDurability, List<ItemAttribute> attributesArr) {
         // Creates an immutable set
         Set<ItemAttribute> attributes = attributesArr == null ? Collections.emptySet() :

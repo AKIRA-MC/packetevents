@@ -18,20 +18,35 @@
 
 package com.github.retrooper.packetevents.protocol.component.builtin.item;
 
+import com.github.retrooper.packetevents.manager.server.ServerVersion;
 import com.github.retrooper.packetevents.protocol.item.jukebox.IJukeboxSong;
 import com.github.retrooper.packetevents.protocol.item.jukebox.JukeboxSong;
+import com.github.retrooper.packetevents.protocol.item.jukebox.JukeboxSongs;
+import com.github.retrooper.packetevents.protocol.mapper.MaybeMappedEntity;
 import com.github.retrooper.packetevents.resources.ResourceLocation;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
 public class ItemJukeboxPlayable {
 
-    private @Nullable IJukeboxSong song;
-    private @Nullable ResourceLocation songKey;
+    private MaybeMappedEntity<IJukeboxSong> song;
+    /**
+     * Removed in 1.21.5
+     */
+    @ApiStatus.Obsolete
     private boolean showInTooltip;
 
+    public ItemJukeboxPlayable(MaybeMappedEntity<IJukeboxSong> song) {
+        this(song, true);
+    }
+
+    /**
+     * {@link #showInTooltip} has been removed in 1.21.5
+     */
+    @ApiStatus.Obsolete
     public ItemJukeboxPlayable(
             @Nullable JukeboxSong song,
             @Nullable ResourceLocation songKey,
@@ -40,85 +55,99 @@ public class ItemJukeboxPlayable {
         this((IJukeboxSong) song, songKey, showInTooltip);
     }
 
+    /**
+     * use {@link #ItemJukeboxPlayable(MaybeMappedEntity, boolean)}
+     */
+    @Deprecated
     public ItemJukeboxPlayable(
             @Nullable IJukeboxSong song,
             @Nullable ResourceLocation songKey,
             boolean showInTooltip
     ) {
-        if ((song == null) == (songKey == null)) {
-            throw new IllegalStateException("Illegal state of both song and "
-                    + "song key combined: " + song + " / " + songKey);
-        }
+        this(new MaybeMappedEntity<>(song, songKey), showInTooltip);
+    }
 
+    /**
+     * {@link #showInTooltip} has been removed in 1.21.5
+     */
+    @ApiStatus.Obsolete
+    public ItemJukeboxPlayable(
+            MaybeMappedEntity<IJukeboxSong> song,
+            boolean showInTooltip
+    ) {
         this.song = song;
-        this.songKey = songKey;
         this.showInTooltip = showInTooltip;
     }
 
     public static ItemJukeboxPlayable read(PacketWrapper<?> wrapper) {
-        IJukeboxSong song;
-        ResourceLocation songKey;
-        if (wrapper.readBoolean()) {
-            song = IJukeboxSong.read(wrapper);
-            songKey = null;
-        } else {
-            song = null;
-            songKey = wrapper.readIdentifier();
-        }
-        boolean showInTooltip = wrapper.readBoolean();
-        return new ItemJukeboxPlayable(song, songKey, showInTooltip);
+        MaybeMappedEntity<IJukeboxSong> song = MaybeMappedEntity.read(wrapper, JukeboxSongs.getRegistry(), IJukeboxSong::read);
+        boolean showInTooltip = wrapper.getServerVersion().isNewerThanOrEquals(ServerVersion.V_1_21_5) || wrapper.readBoolean();
+        return new ItemJukeboxPlayable(song, showInTooltip);
     }
 
     public static void write(PacketWrapper<?> wrapper, ItemJukeboxPlayable jukeboxPlayable) {
-        if (jukeboxPlayable.song != null) {
-            wrapper.writeBoolean(true);
-            IJukeboxSong.write(wrapper, jukeboxPlayable.song);
-        } else {
-            assert jukeboxPlayable.songKey != null;
-            wrapper.writeBoolean(false);
-            wrapper.writeIdentifier(jukeboxPlayable.songKey);
+        MaybeMappedEntity.write(wrapper, jukeboxPlayable.song, IJukeboxSong::write);
+        if (wrapper.getServerVersion().isOlderThan(ServerVersion.V_1_21_5)) {
+            wrapper.writeBoolean(jukeboxPlayable.showInTooltip);
         }
-        wrapper.writeBoolean(jukeboxPlayable.showInTooltip);
     }
 
-    public @Nullable IJukeboxSong getJukeboxSong() {
+    public MaybeMappedEntity<IJukeboxSong> getSongHolder() {
         return this.song;
     }
 
+    public void setSongHolder(MaybeMappedEntity<IJukeboxSong> songHolder) {
+        this.song = songHolder;
+    }
+
+    public @Nullable IJukeboxSong getJukeboxSong() {
+        return this.song.getValue();
+    }
+
+    public void setJukeboxSong(@Nullable IJukeboxSong song) {
+        this.song = new MaybeMappedEntity<>(song);
+    }
+
     public void setJukeboxSong(@Nullable JukeboxSong song) {
-        this.song = song;
-        this.songKey = null;
+        this.setJukeboxSong((IJukeboxSong) song);
     }
 
     @Deprecated
     public @Nullable JukeboxSong getSong() {
-        if (this.song == null) {
+        IJukeboxSong song = this.getJukeboxSong();
+        if (song == null) {
             return null;
-        } else if (this.song instanceof JukeboxSong) {
-            return (JukeboxSong) this.song;
+        } else if (song instanceof JukeboxSong) {
+            return (JukeboxSong) song;
         }
-        return (JukeboxSong) this.song.copy(null);
+        return (JukeboxSong) song.copy(null);
     }
 
     @Deprecated
     public void setSong(JukeboxSong song) {
-        this.song = song;
-        this.songKey = null;
+        this.setJukeboxSong((IJukeboxSong) song);
     }
 
     public @Nullable ResourceLocation getSongKey() {
-        return this.songKey;
+        return this.song.getName();
     }
 
     public void setSongKey(ResourceLocation songKey) {
-        this.song = null;
-        this.songKey = songKey;
+        this.song = new MaybeMappedEntity<>(songKey);
     }
 
+    /**
+     * Removed in 1.21.5
+     */
+    @ApiStatus.Obsolete
     public boolean isShowInTooltip() {
         return this.showInTooltip;
     }
 
+    /**
+     * Removed in 1.21.5
+     */
+    @ApiStatus.Obsolete
     public void setShowInTooltip(boolean showInTooltip) {
         this.showInTooltip = showInTooltip;
     }
@@ -130,11 +159,11 @@ public class ItemJukeboxPlayable {
         ItemJukeboxPlayable that = (ItemJukeboxPlayable) obj;
         if (this.showInTooltip != that.showInTooltip) return false;
         if (!Objects.equals(this.song, that.song)) return false;
-        return Objects.equals(this.songKey, that.songKey);
+        return Objects.equals(this.song, that.song);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.song, this.songKey, this.showInTooltip);
+        return Objects.hash(this.song, this.song, this.showInTooltip);
     }
 }

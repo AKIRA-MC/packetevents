@@ -30,23 +30,21 @@ import org.jetbrains.annotations.ApiStatus;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
 
 public final class Biomes {
 
-    private static final VersionedRegistry<Biome> REGISTRY = new VersionedRegistry<>(
-            "worldgen/biome", "world/biome_mappings");
+    private static final VersionedRegistry<Biome> REGISTRY = new VersionedRegistry<>("worldgen/biome");
 
     // load data from file, biomes are too complex to define in code here
     private static final Map<ResourceLocation, NBTCompound> BIOME_DATA;
 
     static {
         BIOME_DATA = new HashMap<>();
-        try (SequentialNBTReader.Compound dataTag = MappingHelper.decompress("mappings/world/biome_data")) {
-            while (dataTag.hasNext()) {
-                Map.Entry<String, NBT> entry = dataTag.next();
-                if (entry.getKey().equals("version")) {
-                    continue; // skip version field
-                }
+        try (SequentialNBTReader.Compound dataTag = MappingHelper.decompress("mappings/data/worldgen/biome")) {
+            dataTag.skipOne(); // skip version
+            for (Map.Entry<String, NBT> entry : (SequentialNBTReader.Compound) dataTag.next().getValue()) {
                 ResourceLocation biomeKey = new ResourceLocation(entry.getKey());
                 BIOME_DATA.put(biomeKey, ((SequentialNBTReader.Compound) entry.getValue()).readFully());
             }
@@ -60,18 +58,108 @@ public final class Biomes {
 
     @ApiStatus.Internal
     public static Biome define(String key) {
+        return define(key, false);
+    }
+
+    @ApiStatus.Internal
+    public static Biome define(String key, boolean allowNoData) {
         return REGISTRY.define(key, data -> {
             NBTCompound dataTag = BIOME_DATA.get(data.getName());
-            if (dataTag == null) {
-                throw new IllegalArgumentException("Can't define biome " + data.getName() + ", no data found");
+            if (dataTag != null) {
+                return Biome.decode(dataTag, ClientVersion.getLatest(), data);
+            } else if (allowNoData) {
+                BiomeEffects effects = new BiomeEffects(0xC0D8FF, 0x3F76E4, 0x050533,
+                        0x78A7FF, OptionalInt.empty(), OptionalInt.empty(),
+                        BiomeEffects.GrassColorModifier.NONE, Optional.empty(),
+                        Optional.empty(), Optional.empty(),
+                        Optional.empty(), Optional.empty());
+                return new StaticBiome(data, true, 0.8f,
+                        Biome.TemperatureModifier.NONE, 0.4f, effects);
             }
-            return Biome.decode(dataTag, ClientVersion.getLatest(), data);
+            throw new IllegalArgumentException("Can't define biome " + data.getName() + ", no data found");
         });
     }
 
     public static VersionedRegistry<Biome> getRegistry() {
         return REGISTRY;
     }
+
+    @ApiStatus.Obsolete
+    public static final Biome SNOWY_MOUNTAINS = define("snowy_mountains", true);
+    @ApiStatus.Obsolete
+    public static final Biome GIANT_SPRUCE_TAIGA = define("giant_spruce_taiga", true);
+    @ApiStatus.Obsolete
+    public static final Biome BADLANDS_PLATEAU = define("badlands_plateau", true);
+    @ApiStatus.Obsolete
+    public static final Biome DESERT_HILLS = define("desert_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome SNOWY_TAIGA_HILLS = define("snowy_taiga_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome DARK_FOREST_HILLS = define("dark_forest_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome MUSHROOM_FIELD_SHORE = define("mushroom_field_shore", true);
+    @ApiStatus.Obsolete
+    public static final Biome TALL_BIRCH_FOREST = define("tall_birch_forest", true);
+    @ApiStatus.Obsolete
+    public static final Biome SNOWY_TAIGA_MOUNTAINS = define("snowy_taiga_mountains", true);
+    @ApiStatus.Obsolete
+    public static final Biome TAIGA_MOUNTAINS = define("taiga_mountains", true);
+    @ApiStatus.Obsolete
+    public static final Biome BAMBOO_JUNGLE_HILLS = define("bamboo_jungle_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome WOODED_MOUNTAINS = define("wooded_mountains", true);
+    @ApiStatus.Obsolete
+    public static final Biome TAIGA_HILLS = define("taiga_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome MODIFIED_GRAVELLY_MOUNTAINS = define("modified_gravelly_mountains", true);
+    @ApiStatus.Obsolete
+    public static final Biome MODIFIED_WOODED_BADLANDS_PLATEAU = define("modified_wooded_badlands_plateau", true);
+    @ApiStatus.Obsolete
+    public static final Biome DEEP_WARM_OCEAN = define("deep_warm_ocean", true);
+    @ApiStatus.Obsolete
+    public static final Biome GIANT_TREE_TAIGA = define("giant_tree_taiga", true);
+    @ApiStatus.Obsolete
+    public static final Biome MODIFIED_JUNGLE = define("modified_jungle", true);
+    @ApiStatus.Obsolete
+    public static final Biome TALL_BIRCH_HILLS = define("tall_birch_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome WOODED_BADLANDS_PLATEAU = define("wooded_badlands_plateau", true);
+    @ApiStatus.Obsolete
+    public static final Biome SNOWY_TUNDRA = define("snowy_tundra", true);
+    @ApiStatus.Obsolete
+    public static final Biome MOUNTAINS = define("mountains", true);
+    @ApiStatus.Obsolete
+    public static final Biome WOODED_HILLS = define("wooded_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome GRAVELLY_MOUNTAINS = define("gravelly_mountains", true);
+    @ApiStatus.Obsolete
+    public static final Biome GIANT_SPRUCE_TAIGA_HILLS = define("giant_spruce_taiga_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome MODIFIED_BADLANDS_PLATEAU = define("modified_badlands_plateau", true);
+    @ApiStatus.Obsolete
+    public static final Biome JUNGLE_HILLS = define("jungle_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome JUNGLE_EDGE = define("jungle_edge", true);
+    @ApiStatus.Obsolete
+    public static final Biome MODIFIED_JUNGLE_EDGE = define("modified_jungle_edge", true);
+    @ApiStatus.Obsolete
+    public static final Biome SWAMP_HILLS = define("swamp_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome GIANT_TREE_TAIGA_HILLS = define("giant_tree_taiga_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome SHATTERED_SAVANNA = define("shattered_savanna", true);
+    @ApiStatus.Obsolete
+    public static final Biome MOUNTAIN_EDGE = define("mountain_edge", true);
+    @ApiStatus.Obsolete
+    public static final Biome DESERT_LAKES = define("desert_lakes", true);
+    @ApiStatus.Obsolete
+    public static final Biome BIRCH_FOREST_HILLS = define("birch_forest_hills", true);
+    @ApiStatus.Obsolete
+    public static final Biome SHATTERED_SAVANNA_PLATEAU = define("shattered_savanna_plateau", true);
+    @ApiStatus.Obsolete
+    public static final Biome STONE_SHORE = define("stone_shore", true);
+    @ApiStatus.Obsolete
+    public static final Biome NETHER = define("nether", true);
 
     public static final Biome BADLANDS = define("badlands");
     public static final Biome BAMBOO_JUNGLE = define("bamboo_jungle");

@@ -18,7 +18,10 @@
 
 package com.github.retrooper.packetevents.protocol.recipe.display.slot;
 
+import com.github.retrooper.packetevents.manager.server.ServerVersion;
+import com.github.retrooper.packetevents.protocol.item.trimpattern.TrimPattern;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Objects;
 
@@ -26,8 +29,34 @@ public class SmithingTrimSlotDisplay extends SlotDisplay<SmithingTrimSlotDisplay
 
     private SlotDisplay<?> base;
     private SlotDisplay<?> material;
+    /**
+     * Added with 1.21.5
+     */
+    private TrimPattern trimPattern;
+    /**
+     * Removed with 1.21.5, replaced with {@link #trimPattern}
+     */
+    @ApiStatus.Obsolete
     private SlotDisplay<?> pattern;
 
+    /**
+     * Added with 1.21.5
+     */
+    public SmithingTrimSlotDisplay(
+            SlotDisplay<?> base,
+            SlotDisplay<?> material,
+            TrimPattern trimPattern
+    ) {
+        super(SlotDisplayTypes.SMITHING_TRIM);
+        this.base = base;
+        this.material = material;
+        this.trimPattern = trimPattern;
+    }
+
+    /**
+     * Removed with 1.21.5, {@link #pattern} has been replaced with {@link #trimPattern}
+     */
+    @ApiStatus.Obsolete
     public SmithingTrimSlotDisplay(
             SlotDisplay<?> base,
             SlotDisplay<?> material,
@@ -42,14 +71,23 @@ public class SmithingTrimSlotDisplay extends SlotDisplay<SmithingTrimSlotDisplay
     public static SmithingTrimSlotDisplay read(PacketWrapper<?> wrapper) {
         SlotDisplay<?> base = SlotDisplay.read(wrapper);
         SlotDisplay<?> material = SlotDisplay.read(wrapper);
-        SlotDisplay<?> pattern = SlotDisplay.read(wrapper);
-        return new SmithingTrimSlotDisplay(base, material, pattern);
+        if (wrapper.getServerVersion().isNewerThanOrEquals(ServerVersion.V_1_21_5)) {
+            TrimPattern trimPattern = TrimPattern.read(wrapper);
+            return new SmithingTrimSlotDisplay(base, material, trimPattern);
+        } else {
+            SlotDisplay<?> pattern = SlotDisplay.read(wrapper);
+            return new SmithingTrimSlotDisplay(base, material, pattern);
+        }
     }
 
     public static void write(PacketWrapper<?> wrapper, SmithingTrimSlotDisplay display) {
         SlotDisplay.write(wrapper, display.base);
         SlotDisplay.write(wrapper, display.material);
-        SlotDisplay.write(wrapper, display.pattern);
+        if (wrapper.getServerVersion().isNewerThanOrEquals(ServerVersion.V_1_21_5)) {
+            TrimPattern.write(wrapper, display.trimPattern);
+        } else {
+            SlotDisplay.write(wrapper, display.pattern);
+        }
     }
 
     public SlotDisplay<?> getBase() {
@@ -68,12 +106,34 @@ public class SmithingTrimSlotDisplay extends SlotDisplay<SmithingTrimSlotDisplay
         this.material = material;
     }
 
+    /**
+     * Removed with 1.21.5, replaced with {@link #getTrimPattern()}
+     */
+    @ApiStatus.Obsolete
     public SlotDisplay<?> getPattern() {
         return this.pattern;
     }
 
+    /**
+     * Removed with 1.21.5, replaced with {@link #setTrimPattern(TrimPattern)}
+     */
+    @ApiStatus.Obsolete
     public void setPattern(SlotDisplay<?> pattern) {
         this.pattern = pattern;
+    }
+
+    /**
+     * Added with 1.21.5
+     */
+    public TrimPattern getTrimPattern() {
+        return this.trimPattern;
+    }
+
+    /**
+     * Added with 1.21.5
+     */
+    public void setTrimPattern(TrimPattern trimPattern) {
+        this.trimPattern = trimPattern;
     }
 
     @Override
@@ -83,16 +143,17 @@ public class SmithingTrimSlotDisplay extends SlotDisplay<SmithingTrimSlotDisplay
         SmithingTrimSlotDisplay that = (SmithingTrimSlotDisplay) obj;
         if (!this.base.equals(that.base)) return false;
         if (!this.material.equals(that.material)) return false;
-        return this.pattern.equals(that.pattern);
+        if (!Objects.equals(this.pattern, that.pattern)) return false;
+        return Objects.equals(this.trimPattern, that.trimPattern);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.base, this.material, this.pattern);
+        return Objects.hash(this.base, this.material, this.pattern, this.trimPattern);
     }
 
     @Override
     public String toString() {
-        return "SmithingTrimSlotDisplay{base=" + this.base + ", material=" + this.material + ", pattern=" + this.pattern + '}';
+        return "SmithingTrimSlotDisplay{base=" + this.base + ", material=" + this.material + ", trimPattern=" + this.trimPattern + ", pattern=" + this.pattern + '}';
     }
 }

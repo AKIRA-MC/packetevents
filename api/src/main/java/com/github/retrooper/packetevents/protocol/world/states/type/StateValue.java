@@ -142,13 +142,30 @@ public enum StateValue {
     @ApiStatus.Obsolete
     CREAKING("creaking", CreakingHeartState.class, CreakingHeartState::valueOf),
     /**
-     * Added with 1.21.4
+     * Added with 1.21.4, removed with 1.21.5
      */
+    @ApiStatus.Obsolete
     ACTIVE("active", boolean.class, Boolean::parseBoolean),
     /**
      * Added with 1.21.4
      */
     NATURAL("natural", boolean.class, Boolean::parseBoolean),
+    /**
+     * Added with 1.21.5
+     */
+    SEGMENT_AMOUNT("segment_amount", int.class, Integer::parseInt),
+    /**
+     * Added with 1.21.5
+     */
+    CREAKING_HEART_STATE("creaking_heart_state", CreakingHeartState.class, CreakingHeartState::valueOf),
+    /**
+     * Added with 1.21.5
+     */
+    MAP("map", boolean.class, Boolean::parseBoolean),
+    /**
+     * Added with 1.21.6
+     */
+    HYDRATION("hydration", int.class, Integer::parseInt)
     ;
 
     public static final Index<String, StateValue> NAME_INDEX = Index.create(

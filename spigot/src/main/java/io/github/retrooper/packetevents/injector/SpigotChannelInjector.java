@@ -56,6 +56,16 @@ public class SpigotChannelInjector implements ChannelInjector {
     }
 
     @Override
+    public boolean isPlayerSet(Object channel) {
+        if (channel == null) return false;
+        PacketEventsEncoder encoder = getEncoder((Channel) channel);
+        if (encoder.player != null) return true;
+
+        PacketEventsDecoder decoder = getDecoder((Channel) channel);
+        return decoder.player != null;
+    }
+
+    @Override
     public boolean isServerBound() {
         //We want to check if the server has been bound to the port already.
         Object serverConnection = SpigotReflectionUtil.getMinecraftServerConnectionInstance();

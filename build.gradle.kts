@@ -1,7 +1,7 @@
 import java.io.ByteArrayOutputStream
 
 // TODO UPDATE
-val fullVersion = "2.7.1"
+val fullVersion = "2.9.0"
 val snapshot = true
 
 group = "com.github.retrooper"
@@ -27,7 +27,7 @@ ext["versionNoHash"] = "$fullVersion${getVersionMeta(false)}"
 
 tasks {
     wrapper {
-        gradleVersion = "8.10.2"
+        gradleVersion = "8.13"
         distributionType = Wrapper.DistributionType.ALL
     }
 

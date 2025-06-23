@@ -31,6 +31,10 @@ public final class MathUtil {
         return value < min ? min : Math.min(value, max);
     }
 
+    public static float clamp(float value, float min, float max) {
+        return value < min ? min : Math.min(value, max);
+    }
+
     public static int floor(double value) {
         int temp = (int) value;
         return value < (double) temp ? temp - 1 : temp;

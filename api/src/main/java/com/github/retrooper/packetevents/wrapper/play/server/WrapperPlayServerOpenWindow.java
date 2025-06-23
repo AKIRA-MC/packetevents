@@ -21,7 +21,6 @@ package com.github.retrooper.packetevents.wrapper.play.server;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.manager.server.ServerVersion;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
-import com.github.retrooper.packetevents.util.adventure.AdventureSerializer;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import net.kyori.adventure.text.Component;
 
@@ -84,7 +83,7 @@ public class WrapperPlayServerOpenWindow extends PacketWrapper<WrapperPlayServer
         // 1.7 has a very different packet format
         if (serverVersion.isOlderThanOrEquals(ServerVersion.V_1_7_10)) {
             this.type = readUnsignedByte();
-            this.title = AdventureSerializer.fromLegacyFormat(readString(32));
+            this.title = this.getSerializers().fromLegacy(this.readString(32));
             this.legacySlots = readUnsignedByte();
             this.useProvidedWindowTitle = readBoolean();
 
@@ -121,7 +120,7 @@ public class WrapperPlayServerOpenWindow extends PacketWrapper<WrapperPlayServer
         // 1.7 has a very different packet format
         if (serverVersion.isOlderThanOrEquals(ServerVersion.V_1_7_10)) {
             writeByte(this.type);
-            writeString(AdventureSerializer.toLegacyFormat(this.title));
+            writeString(this.getSerializers().asLegacy(this.title));
             writeByte(this.legacySlots);
             writeBoolean(this.useProvidedWindowTitle);
 

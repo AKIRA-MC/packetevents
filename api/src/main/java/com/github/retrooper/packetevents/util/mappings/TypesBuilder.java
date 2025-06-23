@@ -28,6 +28,7 @@ import com.github.retrooper.packetevents.resources.ResourceLocation;
 import com.github.retrooper.packetevents.util.VersionMapper;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@ApiStatus.Internal
 public class TypesBuilder {
     private final String mapPath;
     private Map<ClientVersion, Map<String, Integer>> entries = new HashMap<>();
@@ -58,8 +60,13 @@ public class TypesBuilder {
     }
 
     public void load() {
-        try (final SequentialNBTReader.Compound compound = MappingHelper.decompress("mappings/" + mapPath)) {
-            compound.skipOne(); // skip version tag for now
+        if (this.entries == null) {
+            this.entries = new HashMap<>();
+        }
+        try (final SequentialNBTReader.Compound rootCompound = MappingHelper.decompress("mappings/" + this.mapPath)) {
+            rootCompound.skipOne(); // skip version tag for now
+            SequentialNBTReader.Compound compound = (SequentialNBTReader.Compound) rootCompound.next().getValue();
+
             int length = ((NBTNumber) compound.next().getValue()).getAsInt(); // Second tag is the length
             final SequentialNBTReader.Compound entries = (SequentialNBTReader.Compound) compound.next().getValue(); // Third tag are the entries
 
@@ -140,7 +147,6 @@ public class TypesBuilder {
         }
     }
 
-    @ApiStatus.Internal
     public @Nullable VersionedRegistry<?> getRegistry() {
         return this.registry;
     }
@@ -155,6 +161,11 @@ public class TypesBuilder {
 
     public int getDataIndex(ClientVersion rawVersion) {
         return versionMapper.getIndex(rawVersion);
+    }
+
+    @VisibleForTesting
+    public boolean isMappingDataLoaded() {
+        return this.entries != null;
     }
 
     public void unloadFileMappings() {
@@ -177,5 +188,9 @@ public class TypesBuilder {
             index++;
         }
         return new TypesBuilderData(this, name, ids);
+    }
+
+    public @Nullable Map<ClientVersion, Map<String, Integer>> getEntries() {
+        return this.entries;
     }
 }

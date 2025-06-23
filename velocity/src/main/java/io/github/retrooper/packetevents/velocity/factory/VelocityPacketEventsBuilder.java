@@ -31,6 +31,7 @@ import com.github.retrooper.packetevents.netty.NettyManager;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.protocol.player.User;
+import com.github.retrooper.packetevents.protocol.world.states.WrappedBlockState;
 import com.github.retrooper.packetevents.settings.PacketEventsSettings;
 import com.github.retrooper.packetevents.util.LogManager;
 import com.velocitypowered.api.event.connection.PostLoginEvent;
@@ -131,13 +132,14 @@ public class VelocityPacketEventsBuilder {
                     return this.version;
                 }
 
-                private Object getTargetServer(Player player) {
+                private @Nullable Object getTargetServer(Player player) {
                     ServerConnection server = player.getCurrentServer().orElse(null);
                     if (server != null) {
                         return server;
                     }
                     try {
-                        return this.registeredServer.get(this.connectionInFlight.get(player));
+                        Object connection = this.connectionInFlight.get(player);
+                        return connection != null ? this.registeredServer.get(connection) : null;
                     } catch (IllegalAccessException exception) {
                         throw new RuntimeException(exception);
                     }
@@ -175,6 +177,7 @@ public class VelocityPacketEventsBuilder {
                     PacketEvents.CONNECTION_HANDLER_NAME = "pe-connection-handler-" + id;
                     PacketEvents.SERVER_CHANNEL_HANDLER_NAME = "pe-connection-initializer-" + id;
                     PacketEvents.TIMEOUT_HANDLER_NAME = "pe-timeout-handler-" + id;
+                    WrappedBlockState.ensureLoad();
                     injector.inject();
 
                     loaded = true;
@@ -201,7 +204,7 @@ public class VelocityPacketEventsBuilder {
                             Player player = event.getPlayer();
                             Object channel = PacketEvents.getAPI().getPlayerManager().getChannel(player);
                             // This only happens if a player is a fake player
-                            if(channel == null) {
+                            if (channel == null) {
                                 return;
                             }
                             PacketEvents.getAPI().getInjector().setPlayer(channel, player);

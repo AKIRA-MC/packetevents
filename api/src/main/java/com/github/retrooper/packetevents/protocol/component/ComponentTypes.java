@@ -19,6 +19,30 @@
 package com.github.retrooper.packetevents.protocol.component;
 
 import com.github.retrooper.packetevents.protocol.color.DyeColor;
+import com.github.retrooper.packetevents.protocol.component.builtin.AxolotlVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.CatCollarComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.CatVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.ChickenVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.CowVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.FoxVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.FrogVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.HorseVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.LlamaVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.MooshroomVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.PaintingVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.ParrotVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.PigVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.RabbitVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.SalmonSizeComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.SheepColorComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.ShulkerColorComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.TropicalFishBaseColorComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.TropicalFishPatternColorComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.TropicalFishPatternComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.VillagerVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.WolfCollarComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.WolfSoundVariantComponent;
+import com.github.retrooper.packetevents.protocol.component.builtin.WolfVariantComponent;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ArmorTrim;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.BannerLayers;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.BundleContents;
@@ -31,6 +55,8 @@ import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemAdv
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemAttributeModifiers;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemBees;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemBlockStateProperties;
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemBlocksAttacks;
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemBreakSound;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemConsumable;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemContainerContents;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemContainerLoot;
@@ -42,6 +68,7 @@ import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemEnc
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemEnchantments;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemEquippable;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemFireworks;
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemInstrument;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemJukeboxPlayable;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemLock;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemLore;
@@ -49,20 +76,27 @@ import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemMap
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemMapPostProcessingState;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemModel;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemPotionContents;
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemPotionDurationScale;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemProfile;
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemProvidesBannerPatterns;
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemProvidesTrimMaterial;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemRarity;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemRecipes;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemRepairable;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemTool;
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemTooltipDisplay;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemTooltipStyle;
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemUnbreakable;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemUseCooldown;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemUseRemainder;
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemWeapon;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.LodestoneTracker;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.PotDecorations;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.SuspiciousStewEffects;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.WritableBookContent;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.WrittenBookContent;
 import com.github.retrooper.packetevents.protocol.item.instrument.Instrument;
+import com.github.retrooper.packetevents.protocol.mapper.MaybeMappedEntity;
 import com.github.retrooper.packetevents.protocol.nbt.NBTCompound;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.resources.ResourceLocation;
@@ -84,8 +118,7 @@ import java.util.Collection;
  */
 public final class ComponentTypes {
 
-    private static final VersionedRegistry<ComponentType<?>> REGISTRY = new VersionedRegistry<>(
-            "data_component_type", "item/item_component_mappings");
+    private static final VersionedRegistry<ComponentType<?>> REGISTRY = new VersionedRegistry<>("data_component_type");
 
     private ComponentTypes() {
     }
@@ -122,8 +155,14 @@ public final class ComponentTypes {
             PacketWrapper::readVarInt, PacketWrapper::writeVarInt);
     public static final ComponentType<Integer> DAMAGE = define("damage",
             PacketWrapper::readVarInt, PacketWrapper::writeVarInt);
-    public static final ComponentType<Boolean> UNBREAKABLE = define("unbreakable",
-            PacketWrapper::readBoolean, PacketWrapper::writeBoolean);
+    public static final ComponentType<ItemUnbreakable> UNBREAKABLE_MODERN = define("unbreakable",
+            ItemUnbreakable::read, ItemUnbreakable::write);
+    /**
+     * Changed in 1.21.5
+     */
+    @Deprecated
+    public static final ComponentType<Boolean> UNBREAKABLE = UNBREAKABLE_MODERN.legacyMap(
+            ItemUnbreakable::isShowInTooltip, ItemUnbreakable::new);
     public static final ComponentType<Component> CUSTOM_NAME = define("custom_name",
             PacketWrapper::readComponent, PacketWrapper::writeComponent);
     public static final ComponentType<Component> ITEM_NAME = define("item_name",
@@ -148,8 +187,16 @@ public final class ComponentTypes {
     @Deprecated
     public static final ComponentType<Integer> CUSTOM_MODEL_DATA = CUSTOM_MODEL_DATA_LISTS.legacyMap(
             ItemCustomModelData::getLegacyId, ItemCustomModelData::new);
+    /**
+     * Removed with 1.21.5
+     */
+    @ApiStatus.Obsolete
     public static final ComponentType<Dummy> HIDE_ADDITIONAL_TOOLTIP = define("hide_additional_tooltip",
             Dummy::dummyRead, Dummy::dummyWrite);
+    /**
+     * Removed with 1.21.5
+     */
+    @ApiStatus.Obsolete
     public static final ComponentType<Dummy> HIDE_TOOLTIP = define("hide_tooltip",
             Dummy::dummyRead, Dummy::dummyWrite);
     public static final ComponentType<Integer> REPAIR_COST = define("repair_cost",
@@ -204,8 +251,12 @@ public final class ComponentTypes {
             PacketWrapper::readNBT, PacketWrapper::writeNBT);
     public static final ComponentType<NBTCompound> BLOCK_ENTITY_DATA = define("block_entity_data",
             PacketWrapper::readNBT, PacketWrapper::writeNBT);
-    public static final ComponentType<Instrument> INSTRUMENT = define("instrument",
-            Instrument::read, Instrument::write);
+    public static final ComponentType<ItemInstrument> ITEM_INSTRUMENT = define("instrument",
+            ItemInstrument::read, ItemInstrument::write);
+    @Deprecated
+    public static final ComponentType<Instrument> INSTRUMENT = ITEM_INSTRUMENT.legacyMap(
+            inst -> inst.getInstrument().getValue(),
+            inst -> new ItemInstrument(new MaybeMappedEntity<>(inst)));
     public static final ComponentType<Integer> OMINOUS_BOTTLE_AMPLIFIER = define("ominous_bottle_amplifier",
             PacketWrapper::readVarInt, PacketWrapper::writeVarInt);
     public static final ComponentType<ItemRecipes> RECIPES = define("recipes",
@@ -264,6 +315,162 @@ public final class ComponentTypes {
             ItemDeathProtection::read, ItemDeathProtection::write);
     public static final ComponentType<ItemTooltipStyle> TOOLTIP_STYLE = define("tooltip_style",
             ItemTooltipStyle::read, ItemTooltipStyle::write);
+
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<ItemTooltipDisplay> TOOLTIP_DISPLAY = define("tooltip_display",
+            ItemTooltipDisplay::read, ItemTooltipDisplay::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<ItemWeapon> WEAPON = define("weapon",
+            ItemWeapon::read, ItemWeapon::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<ItemBlocksAttacks> BLOCKS_ATTACKS = define("blocks_attacks",
+            ItemBlocksAttacks::read, ItemBlocksAttacks::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<ItemPotionDurationScale> POTION_DURATION_SCALE = define("potion_duration_scale",
+            ItemPotionDurationScale::read, ItemPotionDurationScale::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<ItemProvidesTrimMaterial> PROVIDES_TRIM_MATERIAL = define("provides_trim_material",
+            ItemProvidesTrimMaterial::read, ItemProvidesTrimMaterial::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<ItemProvidesBannerPatterns> PROVIDES_BANNER_PATTERNS = define("provides_banner_patterns",
+            ItemProvidesBannerPatterns::read, ItemProvidesBannerPatterns::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<ItemBreakSound> BREAK_SOUND = define("break_sound",
+            ItemBreakSound::read, ItemBreakSound::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<VillagerVariantComponent> VILLAGER_VARIANT = define("villager/variant",
+            VillagerVariantComponent::read, VillagerVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<WolfVariantComponent> WOLF_VARIANT = define("wolf/variant",
+            WolfVariantComponent::read, WolfVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<WolfSoundVariantComponent> WOLF_SOUND_VARIANT = define("wolf/sound_variant",
+            WolfSoundVariantComponent::read, WolfSoundVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<WolfCollarComponent> WOLF_COLLAR = define("wolf/collar",
+            WolfCollarComponent::read, WolfCollarComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<FoxVariantComponent> FOX_VARIANT = define("fox/variant",
+            FoxVariantComponent::read, FoxVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<SalmonSizeComponent> SALMON_SIZE = define("salmon/size",
+            SalmonSizeComponent::read, SalmonSizeComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<ParrotVariantComponent> PARROT_VARIANT = define("parrot/variant",
+            ParrotVariantComponent::read, ParrotVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<TropicalFishPatternComponent> TROPICAL_FISH_PATTERN = define("tropical_fish/pattern",
+            TropicalFishPatternComponent::read, TropicalFishPatternComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<TropicalFishBaseColorComponent> TROPICAL_FISH_BASE_COLOR = define("tropical_fish/base_color",
+            TropicalFishBaseColorComponent::read, TropicalFishBaseColorComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<TropicalFishPatternColorComponent> TROPICAL_FISH_PATTERN_COLOR = define("tropical_fish/pattern_color",
+            TropicalFishPatternColorComponent::read, TropicalFishPatternColorComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<MooshroomVariantComponent> MOOSHROOM_VARIANT = define("mooshroom/variant",
+            MooshroomVariantComponent::read, MooshroomVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<RabbitVariantComponent> RABBIT_VARIANT = define("rabbit/variant",
+            RabbitVariantComponent::read, RabbitVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<PigVariantComponent> PIG_VARIANT = define("pig/variant",
+            PigVariantComponent::read, PigVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<CowVariantComponent> COW_VARIANT = define("cow/variant",
+            CowVariantComponent::read, CowVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<ChickenVariantComponent> CHICKEN_VARIANT = define("chicken/variant",
+            ChickenVariantComponent::read, ChickenVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<FrogVariantComponent> FROG_VARIANT = define("frog/variant",
+            FrogVariantComponent::read, FrogVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<HorseVariantComponent> HORSE_VARIANT = define("horse/variant",
+            HorseVariantComponent::read, HorseVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<PaintingVariantComponent> PAINTING_VARIANT = define("painting/variant",
+            PaintingVariantComponent::read, PaintingVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<LlamaVariantComponent> LLAMA_VARIANT = define("llama/variant",
+            LlamaVariantComponent::read, LlamaVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<AxolotlVariantComponent> AXOLOTL_VARIANT = define("axolotl/variant",
+            AxolotlVariantComponent::read, AxolotlVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<CatVariantComponent> CAT_VARIANT = define("cat/variant",
+            CatVariantComponent::read, CatVariantComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<CatCollarComponent> CAT_COLLAR = define("cat/collar",
+            CatCollarComponent::read, CatCollarComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<SheepColorComponent> SHEEP_COLOR = define("sheep/color",
+            SheepColorComponent::read, SheepColorComponent::write);
+    /**
+     * Added with 1.21.5
+     */
+    public static final ComponentType<ShulkerColorComponent> SHULKER_COLOR = define("shulker/color",
+            ShulkerColorComponent::read, ShulkerColorComponent::write);
 
     /**
      * Returns an immutable view of the component types.

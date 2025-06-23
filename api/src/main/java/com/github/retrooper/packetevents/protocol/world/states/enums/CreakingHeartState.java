@@ -21,12 +21,29 @@ package com.github.retrooper.packetevents.protocol.world.states.enums;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
- * Removed with 1.21.4
+ * Removed with 1.21.4, re-added in 1.21.5
  */
-@ApiStatus.Obsolete
 public enum CreakingHeartState {
 
+    /**
+     * Removed with 1.21.4
+     */
+    @ApiStatus.Obsolete
     DISABLED,
-    DORMANT,
+    /**
+     * Removed with 1.21.4
+     */
+    @ApiStatus.Obsolete
     ACTIVE,
+
+    DORMANT,
+
+    /**
+     * Added with 1.21.5
+     */
+    UPROOTED,
+    /**
+     * Added with 1.21.5
+     */
+    AWAKE,
 }

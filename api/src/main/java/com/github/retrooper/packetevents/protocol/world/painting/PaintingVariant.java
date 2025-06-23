@@ -18,6 +18,7 @@
 
 package com.github.retrooper.packetevents.protocol.world.painting;
 
+import com.github.retrooper.packetevents.manager.server.ServerVersion;
 import com.github.retrooper.packetevents.protocol.mapper.CopyableEntity;
 import com.github.retrooper.packetevents.protocol.mapper.DeepComparableEntity;
 import com.github.retrooper.packetevents.protocol.mapper.MappedEntity;
@@ -38,6 +39,21 @@ public interface PaintingVariant extends MappedEntity, CopyableEntity<PaintingVa
     int getHeight();
 
     ResourceLocation getAssetId();
+
+    static PaintingVariant read(PacketWrapper<?> wrapper) {
+        if (wrapper.getServerVersion().isNewerThanOrEquals(ServerVersion.V_1_21)) {
+            return wrapper.readMappedEntityOrDirect(PaintingVariants.getRegistry(), PaintingVariant::readDirect);
+        }
+        return wrapper.readMappedEntity(PaintingVariants.getRegistry());
+    }
+
+    static void write(PacketWrapper<?> wrapper, PaintingVariant variant) {
+        if (wrapper.getServerVersion().isNewerThanOrEquals(ServerVersion.V_1_21)) {
+            wrapper.writeMappedEntityOrDirect(variant, PaintingVariant::writeDirect);
+        } else {
+            wrapper.writeMappedEntity(variant);
+        }
+    }
 
     static PaintingVariant readDirect(PacketWrapper<?> wrapper) {
         int width = wrapper.readVarInt();
