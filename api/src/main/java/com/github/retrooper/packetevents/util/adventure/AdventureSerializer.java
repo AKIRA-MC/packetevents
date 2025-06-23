@@ -225,7 +225,7 @@ public final class AdventureSerializer implements NbtEncoder<Component>, NbtDeco
     public GsonComponentSerializer gson() {
         if (this.gson == null) {
             this.gson = GsonComponentSerializer.builder()
-                    .editOptions(builder -> {
+                    /*.editOptions(builder -> {
                         builder
                                 .values(JSONOptions.byDataVersion().at(0))
                                 .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.BOTH)
@@ -244,9 +244,9 @@ public final class AdventureSerializer implements NbtEncoder<Component>, NbtDeco
                         if (this.version.isNewerThanOrEquals(ClientVersion.V_1_21_4)) {
                             builder.value(JSONOptions.SHADOW_COLOR_MODE, JSONOptions.ShadowColorEmitMode.EMIT_INTEGER);
                         }
-                    })
+                    })*/
                     .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
-                    .showAchievementToComponent(input -> Statistics.getById(input).display())
+                    //.showAchievementToComponent(input -> Statistics.getById(input).display())
                     .build();
         }
         return this.gson;
