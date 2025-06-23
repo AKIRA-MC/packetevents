@@ -35,6 +35,8 @@ public interface ChannelInjector {
 
     void setPlayer(Object channel, Object player);
 
+    boolean isPlayerSet(Object channel);
+
     boolean isProxy();
 
     default PacketSide getPacketSide() {

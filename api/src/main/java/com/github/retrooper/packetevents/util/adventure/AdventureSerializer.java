@@ -19,97 +19,266 @@
 package com.github.retrooper.packetevents.util.adventure;
 
 import com.github.retrooper.packetevents.PacketEvents;
-import com.github.retrooper.packetevents.manager.server.ServerVersion;
 import com.github.retrooper.packetevents.protocol.nbt.NBT;
+import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.protocol.stats.Statistics;
+import com.github.retrooper.packetevents.protocol.util.NbtDecoder;
+import com.github.retrooper.packetevents.protocol.util.NbtEncoder;
+import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.google.gson.JsonElement;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.kyori.adventure.text.serializer.json.JSONOptions;
 import net.kyori.adventure.text.serializer.json.legacyimpl.NBTLegacyHoverEventSerializer;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 
-public class AdventureSerializer {
+import java.util.EnumMap;
+import java.util.Map;
 
-    private static GsonComponentSerializer GSON;
-    private static LegacyComponentSerializer LEGACY;
-    private static AdventureNBTSerializer NBT;
+@NullMarked
+public final class AdventureSerializer implements NbtEncoder<Component>, NbtDecoder<Component> {
 
-    public static GsonComponentSerializer getGsonSerializer() {
-        if (GSON == null) {
-            ServerVersion version = PacketEvents.getAPI().getServerManager().getVersion();
-            GSON = GsonComponentSerializer.builder().editOptions(builder -> {
-                boolean is_1_20_3_or_new = version.isNewerThanOrEquals(ServerVersion.V_1_20_3);
-                builder.value(JSONOptions.EMIT_RGB, version.isNewerThanOrEquals(ServerVersion.V_1_16) && !PacketEvents.getAPI().getSettings().shouldDownsampleColors());
-                builder.value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.BOTH);
-                builder.value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, is_1_20_3_or_new);
-                builder.value(JSONOptions.VALIDATE_STRICT_EVENTS, is_1_20_3_or_new);
-            })
-                    .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
-                    .build();
+    private static final Map<ClientVersion, AdventureSerializer> SERIALIZERS = new EnumMap<>(ClientVersion.class);
+
+    private final ClientVersion version;
+    private @Nullable GsonComponentSerializer gson;
+    private @Nullable LegacyComponentSerializer legacy;
+    private @Nullable AdventureNBTSerializer nbt;
+
+    private AdventureSerializer(ClientVersion version) {
+        this.version = version;
+    }
+
+    public static AdventureSerializer serializer(PacketWrapper<?> wrapper) {
+        return serializer(wrapper.getServerVersion().toClientVersion());
+    }
+
+    public static AdventureSerializer serializer(ClientVersion version) {
+        AdventureSerializer holder = SERIALIZERS.get(version);
+        if (holder != null) {
+            return holder;
         }
-        return GSON;
+        // synchronize serializer construction
+        synchronized (SERIALIZERS) {
+            return SERIALIZERS.computeIfAbsent(version, AdventureSerializer::new);
+        }
+    }
+
+    /**
+     * Please use {@link #serializer(ClientVersion)} instead of this if possible
+     */
+    public static AdventureSerializer serializer() {
+        return serializer(PacketEvents.getAPI().getServerManager().getVersion().toClientVersion());
+    }
+
+    /**
+     * @deprecated use {@link #gson()} instead
+     */
+    @Deprecated
+    public static GsonComponentSerializer getGsonSerializer() {
+        return serializer().gson();
+    }
+
+    /**
+     * @deprecated use {@link #legacy()} instead
+     */
+    @Deprecated
+    public static LegacyComponentSerializer getLegacyGsonSerializer() {
+        return serializer().legacy();
+    }
+
+    /**
+     * @deprecated use {@link #legacy()} instead
+     */
+    @Deprecated
+    public static LegacyComponentSerializer getLegacySerializer() {
+        return serializer().legacy();
+    }
+
+    /**
+     * @deprecated use {@link #nbt()} instead
+     */
+    @Deprecated
+    public static AdventureNBTSerializer getNBTSerializer() {
+        return serializer().nbt();
+    }
+
+    /**
+     * @deprecated use {@link #asLegacy(Component)} instead
+     */
+    @Deprecated
+    public static String asVanilla(Component component) {
+        return serializer().asLegacy(component);
+    }
+
+    /**
+     * @deprecated use {@link #fromLegacy(String)} instead
+     */
+    @Deprecated
+    public static Component fromLegacyFormat(String legacyMessage) {
+        return serializer().fromLegacy(legacyMessage);
+    }
+
+    /**
+     * @deprecated use {@link #asLegacy(Component)} instead
+     */
+    @Deprecated
+    public static String toLegacyFormat(Component component) {
+        return serializer().asLegacy(component);
+    }
+
+    /**
+     * @deprecated use {@link #fromJson(String)} instead
+     */
+    @Deprecated
+    public static Component parseComponent(String json) {
+        return serializer().fromJson(json);
+    }
+
+    /**
+     * @deprecated use {@link #fromJsonTree(JsonElement)} instead
+     */
+    @Deprecated
+    public static Component parseJsonTree(JsonElement json) {
+        return serializer().fromJsonTree(json);
+    }
+
+    /**
+     * @deprecated use {@link #asJson(Component)} instead
+     */
+    @Deprecated
+    public static String toJson(Component component) {
+        return serializer().asJson(component);
+    }
+
+    /**
+     * @deprecated use {@link #asJsonTree(Component)} instead
+     */
+    @Deprecated
+    public static JsonElement toJsonTree(Component component) {
+        return serializer().asJsonTree(component);
+    }
+
+    /**
+     * @deprecated use {@link #fromNbtTag(NBT, PacketWrapper)} instead
+     */
+    @Deprecated
+    public static Component fromNbt(NBT tag) {
+        return serializer().fromNbtTag(tag);
+    }
+
+    /**
+     * @deprecated use {@link #asNbtTag(Component, PacketWrapper)} instead
+     */
+    @Deprecated
+    public static NBT toNbt(Component component) {
+        return serializer().asNbtTag(component);
+    }
+
+    public Component fromLegacy(String legacy) {
+        return this.legacy().deserializeOrNull(legacy);
+    }
+
+    public String asLegacy(Component component) {
+        return this.legacy().serializeOrNull(component);
+    }
+
+    public Component fromJson(String json) {
+        return this.gson().deserializeOrNull(json);
+    }
+
+    public String asJson(Component component) {
+        return this.gson().serializeOrNull(component);
+    }
+
+    @Contract("!null -> !null")
+    public @Nullable Component fromJsonTree(@Nullable JsonElement json) {
+        return json != null ? this.gson().deserializeFromTree(json) : null;
+    }
+
+    @Contract("!null -> !null")
+    public @Nullable JsonElement asJsonTree(@Nullable Component component) {
+        return component != null ? this.gson().serializeToTree(component) : null;
     }
 
     @Deprecated
-    public static LegacyComponentSerializer getLegacyGsonSerializer() {
-        return getLegacySerializer();
+    public Component fromNbtTag(NBT tag) {
+        return this.fromNbtTag(tag, PacketWrapper.createDummyWrapper(this.version));
     }
 
-    public static LegacyComponentSerializer getLegacySerializer() {
-        if (LEGACY == null) {
+    public Component fromNbtTag(NBT tag, PacketWrapper<?> wrapper) {
+        return this.nbt().deserializeOrNull(tag, wrapper);
+    }
+
+    @Deprecated
+    public NBT asNbtTag(Component component) {
+        return this.asNbtTag(component, PacketWrapper.createDummyWrapper(this.version));
+    }
+
+    public NBT asNbtTag(Component component, PacketWrapper<?> wrapper) {
+        return this.nbt().serializeOrNull(component, wrapper);
+    }
+
+    public GsonComponentSerializer gson() {
+        if (this.gson == null) {
+            this.gson = GsonComponentSerializer.builder()
+                    .editOptions(builder -> {
+                        builder
+                                .values(JSONOptions.byDataVersion().at(0))
+                                .value(JSONOptions.EMIT_HOVER_EVENT_TYPE, JSONOptions.HoverEventValueMode.BOTH)
+                                .value(JSONOptions.SHOW_ITEM_HOVER_DATA_MODE, JSONOptions.ShowItemHoverDataMode.EMIT_EITHER);
+                        if (this.version.isNewerThanOrEquals(ClientVersion.V_1_16)
+                                && !PacketEvents.getAPI().getSettings().shouldDownsampleColors()) {
+                            builder.value(JSONOptions.EMIT_RGB, true);
+                        }
+                        if (this.version.isNewerThanOrEquals(ClientVersion.V_1_20_3)) {
+                            builder.value(JSONOptions.EMIT_HOVER_SHOW_ENTITY_ID_AS_INT_ARRAY, true);
+                            builder.value(JSONOptions.VALIDATE_STRICT_EVENTS, true);
+                        }
+                        if (this.version.isNewerThanOrEquals(ClientVersion.V_1_20_5)) {
+                            builder.value(JSONOptions.EMIT_DEFAULT_ITEM_HOVER_QUANTITY, true);
+                        }
+                        if (this.version.isNewerThanOrEquals(ClientVersion.V_1_21_4)) {
+                            builder.value(JSONOptions.SHADOW_COLOR_MODE, JSONOptions.ShadowColorEmitMode.EMIT_INTEGER);
+                        }
+                    })
+                    .legacyHoverEventSerializer(NBTLegacyHoverEventSerializer.get())
+                    .showAchievementToComponent(input -> Statistics.getById(input).display())
+                    .build();
+        }
+        return this.gson;
+    }
+
+    public LegacyComponentSerializer legacy() {
+        if (this.legacy == null) {
             LegacyComponentSerializer.Builder builder = LegacyComponentSerializer.builder();
-            if (PacketEvents.getAPI().getServerManager().getVersion().isNewerThanOrEquals(ServerVersion.V_1_16))
-                builder = builder.hexColors();
-            LEGACY = builder.build();
+            if (this.version.isNewerThanOrEquals(ClientVersion.V_1_16)) {
+                builder.hexColors();
+            }
+            this.legacy = builder.build();
         }
-        return LEGACY;
+        return this.legacy;
     }
 
-    public static AdventureNBTSerializer getNBTSerializer() {
-        if (NBT == null) {
-            NBT = new AdventureNBTSerializer(
-                    PacketEvents.getAPI().getServerManager().getVersion().isOlderThan(ServerVersion.V_1_16) ||
-                            PacketEvents.getAPI().getSettings().shouldDownsampleColors()
-            );
+    public AdventureNBTSerializer nbt() {
+        if (this.nbt == null) {
+            boolean downsample = this.version.isOlderThan(ClientVersion.V_1_16)
+                    || PacketEvents.getAPI().getSettings().shouldDownsampleColors();
+            this.nbt = new AdventureNBTSerializer(this.version, downsample);
         }
-        return NBT;
+        return this.nbt;
     }
 
-    public static String asVanilla(Component component) {
-        return getLegacySerializer().serialize(component);
+    @Override
+    public Component decode(NBT nbt, PacketWrapper<?> wrapper) {
+        return this.nbt().deserialize(nbt, wrapper);
     }
 
-    public static Component fromLegacyFormat(String legacyMessage) {
-        return getLegacySerializer().deserializeOrNull(legacyMessage);
+    @Override
+    public NBT encode(PacketWrapper<?> wrapper, Component value) {
+        return this.nbt().serialize(value, wrapper);
     }
-
-    public static String toLegacyFormat(Component component) {
-        return getLegacySerializer().serializeOrNull(component);
-    }
-
-    public static Component parseComponent(String json) {
-        return getGsonSerializer().deserializeOrNull(json);
-    }
-
-    public static Component parseJsonTree(JsonElement json) {
-        return getGsonSerializer().deserializeFromTree(json);
-    }
-
-    public static String toJson(Component component) {
-        return getGsonSerializer().serializeOrNull(component);
-    }
-
-    public static JsonElement toJsonTree(Component component) {
-        return getGsonSerializer().serializeToTree(component);
-    }
-
-    public static Component fromNbt(NBT nbt) {
-        return getNBTSerializer().deserialize(nbt);
-    }
-
-    public static NBT toNbt(Component component) {
-        return getNBTSerializer().serialize(component);
-    }
-
 }

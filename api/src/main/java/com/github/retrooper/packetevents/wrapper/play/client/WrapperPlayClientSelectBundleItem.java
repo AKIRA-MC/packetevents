@@ -19,6 +19,7 @@
 package com.github.retrooper.packetevents.wrapper.play.client;
 
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
+import com.github.retrooper.packetevents.manager.server.ServerVersion;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 
@@ -41,6 +42,9 @@ public class WrapperPlayClientSelectBundleItem extends PacketWrapper<WrapperPlay
     public void read() {
         this.slotId = this.readVarInt();
         this.selectedItemIndex = this.readVarInt();
+        if (this.selectedItemIndex < 0 && this.selectedItemIndex != -1) {
+            throw new IllegalArgumentException("Invalid selectedItemIndex: " + this.selectedItemIndex);
+        }
     }
 
     @Override

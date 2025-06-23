@@ -1,7 +1,7 @@
 <!--suppress HtmlDeprecatedAttribute -->
 <div align="center">
-    <h2><i>packetevents</i></h2>
-    <h3><i>Precision meets performance—a powerful tool for mastering Minecraft packet manipulation with speed and finesse.</i></h3>
+    <h2><i>PacketEvents</i></h2>
+    <h3><i>A powerful networking library for Minecraft packet processing and manipulation.</i></h3>
     <a href="https://github.com/retrooper/packetevents/actions"><img src="https://img.shields.io/github/actions/workflow/status/retrooper/packetevents/gradle-publish.yml?style=for-the-badge&logo=github"></a>
     <a href="https://discord.gg/DVHxPPxHZc"><img src="https://img.shields.io/discord/721686193061888071?color=5562e9&logo=discord&logoColor=white&style=for-the-badge"></a>
     <img src="https://img.shields.io/github/license/retrooper/packetevents?style=for-the-badge&logo=github">
@@ -14,8 +14,8 @@
     - [Getting Started](https://docs.packetevents.com/getting-started)
     - [JavaDocs](https://javadocs.packetevents.com)
 - [Releases](https://github.com/retrooper/packetevents/releases/)
-    - [GitHub](https://github.com/retrooper/packetevents/releases/)
     - [Modrinth](https://modrinth.com/plugin/packetevents)
+    - [GitHub](https://github.com/retrooper/packetevents/releases/)
     - [SpigotMC](https://www.spigotmc.org/resources/packetevents-api.80279/)
 - [Development Builds](https://ci.codemc.io/job/retrooper/job/packetevents)
 - [Statistics](https://bstats.org/plugin/bukkit/packetevents/11327)
@@ -35,7 +35,7 @@
 <i>Here are some projects that we are heavily inspired by, thus we have integrated</i>\
 <i>small portions of their code into our work.</i>
 
-[Protocol Documentation for the Minecraft Java Edition](https://wiki.vg/Protocol)\
+[Protocol Documentation for the Minecraft Java Edition](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Protocol)\
 [ViaVersion](https://github.com/ViaVersion/ViaVersion)\
 [ProtocolSupport](https://github.com/ProtocolSupport/ProtocolSupport)\
 [adventure](https://github.com/KyoriPowered/adventure)\

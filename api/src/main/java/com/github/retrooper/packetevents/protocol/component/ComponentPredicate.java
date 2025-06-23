@@ -31,6 +31,10 @@ public class ComponentPredicate implements Predicate<IComponentMap> {
 
     private List<ComponentValue<?>> requiredComponents;
 
+    public ComponentPredicate() {
+        this(new ArrayList<>());
+    }
+
     public ComponentPredicate(List<ComponentValue<?>> requiredComponents) {
         this.requiredComponents = requiredComponents;
     }

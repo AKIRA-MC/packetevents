@@ -145,6 +145,9 @@ public abstract class ProtocolPacketEvent extends PacketEvent implements PlayerE
         return (T) player;
     }
 
+    /**
+     * Gets the connection state this packet has been sent/received in.
+     */
     public ConnectionState getConnectionState() {
         return connectionState;
     }

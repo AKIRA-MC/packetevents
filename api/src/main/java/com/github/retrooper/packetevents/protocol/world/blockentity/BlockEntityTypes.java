@@ -20,13 +20,13 @@ package com.github.retrooper.packetevents.protocol.world.blockentity;
 
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.util.mappings.VersionedRegistry;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Collection;
 
 public final class BlockEntityTypes {
 
-    private static final VersionedRegistry<BlockEntityType> REGISTRY = new VersionedRegistry<>(
-            "block_entity_type", "block/block_entity_type_mappings");
+    private static final VersionedRegistry<BlockEntityType> REGISTRY = new VersionedRegistry<>("block_entity_type");
 
     private BlockEntityTypes() {
     }
@@ -86,14 +86,27 @@ public final class BlockEntityTypes {
     public static final BlockEntityType SCULK_CATALYST = define("sculk_catalyst");
     public static final BlockEntityType SCULK_SHRIEKER = define("sculk_shrieker");
     public static final BlockEntityType CHISELED_BOOKSHELF = define("chiseled_bookshelf");
+    @ApiStatus.Obsolete
+    public static final BlockEntityType SUSPICIOUS_SAND = define("suspicious_sand");
     public static final BlockEntityType BRUSHABLE_BLOCK = define("brushable_block");
     public static final BlockEntityType DECORATED_POT = define("decorated_pot");
     public static final BlockEntityType CRAFTER = define("crafter");
     public static final BlockEntityType TRIAL_SPAWNER = define("trial_spawner");
     public static final BlockEntityType VAULT = define("vault");
 
-    // added with 1.21.2
+    /**
+     * Added with 1.21.2
+     */
     public static final BlockEntityType CREAKING_HEART = define("creaking_heart");
+
+    /**
+     * Added with 1.21.5
+     */
+    public static final BlockEntityType TEST_BLOCK = define("test_block");
+    /**
+     * Added with 1.21.5
+     */
+    public static final BlockEntityType TEST_INSTANCE_BLOCK = define("test_instance_block");
 
     /**
      * Returns an immutable view of the block entity types.

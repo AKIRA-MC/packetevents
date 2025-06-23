@@ -23,12 +23,14 @@ import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.resources.ResourceLocation;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NullMarked;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+@NullMarked
 public final class SimpleRegistry<T extends MappedEntity> implements IRegistry<T> {
 
     private final ResourceLocation registryKey;
@@ -84,6 +86,11 @@ public final class SimpleRegistry<T extends MappedEntity> implements IRegistry<T
     @Override
     public Collection<T> getEntries() {
         return Collections.unmodifiableCollection(this.typeMap.values());
+    }
+
+    @Override
+    public int size() {
+        return this.typeMap.size();
     }
 
     @Override

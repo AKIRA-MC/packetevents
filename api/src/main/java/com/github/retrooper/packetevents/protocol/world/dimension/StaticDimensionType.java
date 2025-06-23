@@ -23,12 +23,15 @@ import com.github.retrooper.packetevents.protocol.nbt.NBT;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
 import com.github.retrooper.packetevents.resources.ResourceLocation;
 import com.github.retrooper.packetevents.util.mappings.TypesBuilderData;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 import java.util.OptionalLong;
 
 public class StaticDimensionType extends AbstractMappedEntity implements DimensionType {
+
+    private static final @Nullable Integer DEFAULT_CLOUD_HEIGHT = 192;
 
     private final OptionalLong fixedTime;
     private final boolean hasSkyLight;
@@ -44,6 +47,7 @@ public class StaticDimensionType extends AbstractMappedEntity implements Dimensi
     private final String infiniburnTag;
     private final @Nullable ResourceLocation effectsLocation;
     private final float ambientLight;
+    private final @Nullable Integer cloudHeight;
     private final boolean piglinSafe;
     private final boolean hasRaids;
     private final @Nullable NBT monsterSpawnLightLevel;
@@ -57,16 +61,29 @@ public class StaticDimensionType extends AbstractMappedEntity implements Dimensi
             int monsterSpawnBlockLightLimit
     ) {
         this(null, fixedTime, hasSkyLight, hasCeiling, ultraWarm, natural, coordinateScale, bedWorking, respawnAnchorWorking,
-                minY, height, logicalHeight, infiniburnTag, effectsLocation, ambientLight, piglinSafe, hasRaids,
+                minY, height, logicalHeight, infiniburnTag, effectsLocation, ambientLight,
+                DEFAULT_CLOUD_HEIGHT, piglinSafe, hasRaids, monsterSpawnLightLevel, monsterSpawnBlockLightLimit);
+    }
+
+    public StaticDimensionType(
+            OptionalLong fixedTime, boolean hasSkyLight, boolean hasCeiling,
+            boolean ultraWarm, boolean natural, double coordinateScale, boolean bedWorking, boolean respawnAnchorWorking,
+            int minY, int height, int logicalHeight, String infiniburnTag, @Nullable ResourceLocation effectsLocation,
+            float ambientLight, @Nullable Integer cloudHeight, boolean piglinSafe, boolean hasRaids,
+            @Nullable NBT monsterSpawnLightLevel, int monsterSpawnBlockLightLimit
+    ) {
+        this(null, fixedTime, hasSkyLight, hasCeiling, ultraWarm, natural, coordinateScale, bedWorking, respawnAnchorWorking,
+                minY, height, logicalHeight, infiniburnTag, effectsLocation, ambientLight, cloudHeight, piglinSafe, hasRaids,
                 monsterSpawnLightLevel, monsterSpawnBlockLightLimit);
     }
 
+    @ApiStatus.Internal
     public StaticDimensionType(
             @Nullable TypesBuilderData data, OptionalLong fixedTime, boolean hasSkyLight, boolean hasCeiling,
             boolean ultraWarm, boolean natural, double coordinateScale, boolean bedWorking, boolean respawnAnchorWorking,
             int minY, int height, int logicalHeight, String infiniburnTag, @Nullable ResourceLocation effectsLocation,
-            float ambientLight, boolean piglinSafe, boolean hasRaids, @Nullable NBT monsterSpawnLightLevel,
-            int monsterSpawnBlockLightLimit
+            float ambientLight, @Nullable Integer cloudHeight, boolean piglinSafe, boolean hasRaids,
+            @Nullable NBT monsterSpawnLightLevel, int monsterSpawnBlockLightLimit
     ) {
         super(data);
         this.fixedTime = fixedTime;
@@ -83,6 +100,7 @@ public class StaticDimensionType extends AbstractMappedEntity implements Dimensi
         this.infiniburnTag = infiniburnTag;
         this.effectsLocation = effectsLocation;
         this.ambientLight = ambientLight;
+        this.cloudHeight = cloudHeight;
         this.piglinSafe = piglinSafe;
         this.hasRaids = hasRaids;
         this.monsterSpawnLightLevel = monsterSpawnLightLevel;
@@ -93,8 +111,8 @@ public class StaticDimensionType extends AbstractMappedEntity implements Dimensi
     public DimensionType copy(@Nullable TypesBuilderData newData) {
         return new StaticDimensionType(newData, this.fixedTime, this.hasSkyLight, this.hasCeiling, this.ultraWarm,
                 this.natural, this.coordinateScale, this.bedWorking, this.respawnAnchorWorking, this.minY, this.height,
-                this.logicalHeight, this.infiniburnTag, this.effectsLocation, this.ambientLight, this.piglinSafe,
-                this.hasRaids, this.monsterSpawnLightLevel, this.monsterSpawnBlockLightLimit);
+                this.logicalHeight, this.infiniburnTag, this.effectsLocation, this.ambientLight, this.cloudHeight,
+                this.piglinSafe, this.hasRaids, this.monsterSpawnLightLevel, this.monsterSpawnBlockLightLimit);
     }
 
     @Override
@@ -165,6 +183,11 @@ public class StaticDimensionType extends AbstractMappedEntity implements Dimensi
     @Override
     public float getAmbientLight() {
         return this.ambientLight;
+    }
+
+    @Override
+    public @Nullable Integer getCloudHeight() {
+        return this.cloudHeight;
     }
 
     @Override

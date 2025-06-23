@@ -26,8 +26,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class Attributes {
 
-    private static final VersionedRegistry<Attribute> REGISTRY = new VersionedRegistry<>(
-            "attribute", "attribute/attribute_mappings");
+    private static final VersionedRegistry<Attribute> REGISTRY = new VersionedRegistry<>("attribute");
 
     private Attributes() {
     }
@@ -50,7 +49,7 @@ public final class Attributes {
         if (normedName.startsWith(ResourceLocation.VANILLA_NAMESPACE + ":generic.")
                 || normedName.startsWith(ResourceLocation.VANILLA_NAMESPACE + ":player.")
                 || normedName.startsWith(ResourceLocation.VANILLA_NAMESPACE + ":zombie.")) {
-            normedName = normedName.substring(name.indexOf('.') + 1);
+            normedName = normedName.substring(normedName.indexOf('.') + 1);
         }
         return REGISTRY.getByName(normedName);
     }
@@ -187,6 +186,22 @@ public final class Attributes {
      */
     public static final Attribute TEMPT_RANGE = define("tempt_range",
             null, 10d, 0d, 2048d);
+
+    /**
+     * Added with 1.21.6
+     */
+    public static final Attribute CAMERA_DISTANCE = define("camera_distance",
+            null, 4d, 0d, 32d);
+    /**
+     * Added with 1.21.6
+     */
+    public static final Attribute WAYPOINT_TRANSMIT_RANGE = define("waypoint_transmit_range",
+            null, 0d, 0d, 60_000_000d);
+    /**
+     * Added with 1.21.6
+     */
+    public static final Attribute WAYPOINT_RECEIVE_RANGE = define("waypoint_receive_range",
+            null, 0d, 0d, 60_000_000d);
 
     /**
      * This attribute has been renamed in 1.20.5 to {@link #JUMP_STRENGTH}

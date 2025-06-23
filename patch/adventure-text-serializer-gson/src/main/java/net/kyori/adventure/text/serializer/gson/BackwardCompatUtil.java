@@ -20,6 +20,7 @@ package net.kyori.adventure.text.serializer.gson;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.nbt.api.BinaryTagHolder;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.util.Codec;
@@ -37,6 +38,7 @@ public final class BackwardCompatUtil {
     public static final boolean IS_4_15_0_OR_NEWER;
     public static final boolean IS_4_17_0_OR_NEWER;
     public static final boolean IS_4_18_0_OR_NEWER;
+    public static final boolean IS_4_22_0_OR_NEWER;
 
     static {
         boolean is4_10_0OrNewer = false;
@@ -77,12 +79,20 @@ public final class BackwardCompatUtil {
         boolean is4_18_0OrNewer = false;
         try {
             // shadow color support was added in 4.18.0
-            // FIXME adventure v4.18.0
-            // Style.empty().shadowColor();
-            // is4_18_0OrNewer = true;
+            Style.empty().shadowColor();
+            is4_18_0OrNewer = true;
         } catch (Throwable ignored) {
         }
         IS_4_18_0_OR_NEWER = is4_18_0OrNewer;
+
+        boolean is4_22_0OrNewer = false;
+        try {
+            // support for 1.21.6+ clickevent payloads was added in 4.22.0
+            ClickEvent.custom(Key.key("test"), "{test:true}");
+            is4_22_0OrNewer = true;
+        } catch (Throwable ignored) {
+        }
+        IS_4_22_0_OR_NEWER = is4_22_0OrNewer;
     }
 
     private BackwardCompatUtil() {

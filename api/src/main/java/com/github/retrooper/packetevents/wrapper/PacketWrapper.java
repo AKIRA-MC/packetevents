@@ -62,17 +62,17 @@ import com.github.retrooper.packetevents.protocol.chat.RemoteChatSession;
 import com.github.retrooper.packetevents.protocol.chat.SignedCommandArgument;
 import com.github.retrooper.packetevents.protocol.chat.filter.FilterMask;
 import com.github.retrooper.packetevents.protocol.chat.filter.FilterMaskType;
-import com.github.retrooper.packetevents.protocol.component.ComponentType;
-import com.github.retrooper.packetevents.protocol.component.ComponentTypes;
-import com.github.retrooper.packetevents.protocol.component.PatchableComponentMap;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataType;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityMetadataProvider;
 import com.github.retrooper.packetevents.protocol.entity.villager.VillagerData;
+import com.github.retrooper.packetevents.protocol.entity.villager.profession.VillagerProfession;
+import com.github.retrooper.packetevents.protocol.entity.villager.profession.VillagerProfessions;
+import com.github.retrooper.packetevents.protocol.entity.villager.type.VillagerType;
+import com.github.retrooper.packetevents.protocol.entity.villager.type.VillagerTypes;
 import com.github.retrooper.packetevents.protocol.item.ItemStack;
-import com.github.retrooper.packetevents.protocol.item.type.ItemType;
-import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
+import com.github.retrooper.packetevents.protocol.item.ItemStackSerialization;
 import com.github.retrooper.packetevents.protocol.mapper.MappedEntity;
 import com.github.retrooper.packetevents.protocol.nbt.NBT;
 import com.github.retrooper.packetevents.protocol.nbt.NBTCompound;
@@ -89,6 +89,7 @@ import com.github.retrooper.packetevents.protocol.recipe.data.MerchantOffer;
 import com.github.retrooper.packetevents.protocol.world.Dimension;
 import com.github.retrooper.packetevents.protocol.world.WorldBlockPosition;
 import com.github.retrooper.packetevents.resources.ResourceLocation;
+import com.github.retrooper.packetevents.util.Either;
 import com.github.retrooper.packetevents.util.KnownPack;
 import com.github.retrooper.packetevents.util.MathUtil;
 import com.github.retrooper.packetevents.util.StringUtil;
@@ -201,12 +202,20 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
         this.clientVersion = ClientVersion.UNKNOWN;
         this.serverVersion = PacketEvents.getAPI().getServerManager().getVersion();
         this.buffer = null;
-        int id = packetType.getId(PacketEvents.getAPI().getServerManager().getVersion().toClientVersion());
+        int id = packetType.getId(this.serverVersion.toClientVersion());
         this.packetTypeData = new PacketTypeData(packetType, id);
     }
 
+    public static PacketWrapper<?> createDummyWrapper(ClientVersion version) {
+        return new PacketWrapper<>(version, version.toServerVersion(), -2);
+    }
+
     public static PacketWrapper<?> createUniversalPacketWrapper(Object byteBuf) {
-        PacketWrapper<?> wrapper = new PacketWrapper<>(ClientVersion.UNKNOWN, PacketEvents.getAPI().getServerManager().getVersion(), -2);
+        return createUniversalPacketWrapper(byteBuf, PacketEvents.getAPI().getServerManager().getVersion());
+    }
+
+    public static PacketWrapper<?> createUniversalPacketWrapper(Object byteBuf, ServerVersion version) {
+        PacketWrapper<?> wrapper = new PacketWrapper<>(ClientVersion.UNKNOWN, version, -2);
         wrapper.buffer = byteBuf;
         return wrapper;
     }
@@ -271,7 +280,7 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
 
     public final void readEvent(ProtocolPacketEvent event) {
         PacketWrapper<?> last = event.getLastUsedWrapper();
-        if (last != null) {
+        if (this.getClass().isInstance(last)) {
             copy((T) last);
         } else {
             read();
@@ -427,7 +436,15 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
     }
 
     public <K, V> Map<K, V> readMap(Reader<K> keyFunction, Reader<V> valueFunction) {
-        int size = readVarInt();
+        return this.readMap(keyFunction, valueFunction, Integer.MAX_VALUE);
+    }
+
+    public <K, V> Map<K, V> readMap(Reader<K> keyFunction, Reader<V> valueFunction, int maxSize) {
+        int size = this.readVarInt();
+        if (size > maxSize) {
+            throw new RuntimeException(size + " elements exceeded max size of: " + maxSize);
+        }
+
         Map<K, V> map = new HashMap<>(size);
         for (int i = 0; i < size; i++) {
             K key = keyFunction.apply(this);
@@ -448,45 +465,20 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
     }
 
     public VillagerData readVillagerData() {
-        int villagerTypeId = readVarInt();
-        int villagerProfessionId = readVarInt();
+        VillagerType type = this.readMappedEntity(VillagerTypes.getRegistry());
+        VillagerProfession profession = this.readMappedEntity(VillagerProfessions.getRegistry());
         int level = readVarInt();
-        return new VillagerData(villagerTypeId, villagerProfessionId, level);
+        return new VillagerData(type, profession, level);
     }
 
     public void writeVillagerData(VillagerData data) {
-        writeVarInt(data.getType().getId());
-        writeVarInt(data.getProfession().getId());
+        this.writeMappedEntity(data.getType());
+        this.writeMappedEntity(data.getProfession());
         writeVarInt(data.getLevel());
     }
 
-    // item stack serialization was basically completely rewritten in 1.20.5
-    @SuppressWarnings("unchecked")
     public ItemStack readItemStackModern() {
-        int count = this.readVarInt();
-        if (count <= 0) {
-            return ItemStack.EMPTY;
-        }
-        ItemType itemType = this.readMappedEntity(ItemTypes.getRegistry());
-
-        // read component patch counts
-        int presentCount = this.readVarInt();
-        int absentCount = this.readVarInt();
-        if (presentCount == 0 && absentCount == 0) {
-            return ItemStack.builder().type(itemType).amount(count).build();
-        }
-
-        PatchableComponentMap components = new PatchableComponentMap(
-                itemType.getComponents(), new HashMap<>(4));
-        for (int i = 0; i < presentCount; i++) {
-            ComponentType<?> type = this.readMappedEntity(ComponentTypes.getRegistry());
-            components.set((ComponentType<Object>) type, type.read(this));
-        }
-        for (int i = 0; i < absentCount; i++) {
-            components.unset(this.readMappedEntity(ComponentTypes.getRegistry()));
-        }
-
-        return ItemStack.builder().type(itemType).amount(count).components(components).build();
+        return ItemStackSerialization.readModern(this);
     }
 
     public ItemStack readPresentItemStack() {
@@ -498,74 +490,12 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
     }
 
     public @NotNull ItemStack readItemStack() {
-        if (this.serverVersion.isNewerThanOrEquals(ServerVersion.V_1_20_5)) {
-            return this.readItemStackModern();
-        }
-
-        boolean v1_13_2 = serverVersion.isNewerThanOrEquals(ServerVersion.V_1_13_2);
-        if (v1_13_2) {
-            if (!readBoolean()) {
-                return ItemStack.EMPTY;
-            }
-        }
-        int typeID = v1_13_2 ? readVarInt() : readShort();
-        if (typeID < 0 && !v1_13_2) { // 1.13.2 doesn't have this logic
-            return ItemStack.EMPTY;
-        }
-        ItemType type = ItemTypes.getById(serverVersion.toClientVersion(), typeID);
-        int amount = readByte();
-        int legacyData = v1_13_2 ? -1 : readShort();
-        NBTCompound nbt = readNBT();
-        return ItemStack.builder()
-                .type(type)
-                .amount(amount)
-                .nbt(nbt)
-                .legacyData(legacyData)
-                .build();
+        return ItemStackSerialization.read(this);
     }
 
     // item stack serialization was basically completely rewritten in 1.20.5
-    @SuppressWarnings("unchecked")
-    public void writeItemStackModern(ItemStack itemStack) {
-        if (itemStack.isEmpty()) {
-            this.writeByte(0);
-            return;
-        }
-        this.writeVarInt(itemStack.getAmount());
-        this.writeMappedEntity(itemStack.getType());
-
-        if (!itemStack.hasComponentPatches()) {
-            this.writeShort(0);
-            return; // early return
-        }
-
-        // write component patch counts
-        Map<ComponentType<?>, Optional<?>> allPatches = itemStack.getComponents().getPatches();
-        int presentCount = 0, absentCount = 0;
-        for (Map.Entry<ComponentType<?>, Optional<?>> patch : allPatches.entrySet()) {
-            if (patch.getValue().isPresent()) {
-                presentCount++;
-            } else {
-                absentCount++;
-            }
-        }
-        this.writeVarInt(presentCount);
-        this.writeVarInt(absentCount);
-
-        // write present patches
-        for (Map.Entry<ComponentType<?>, Optional<?>> patch : allPatches.entrySet()) {
-            if (patch.getValue().isPresent()) {
-                this.writeVarInt(patch.getKey().getId(this.serverVersion.toClientVersion()));
-                ((ComponentType<Object>) patch.getKey()).write(this, patch.getValue().get());
-            }
-        }
-
-        // write absent patches
-        for (Map.Entry<ComponentType<?>, Optional<?>> patch : allPatches.entrySet()) {
-            if (!patch.getValue().isPresent()) {
-                this.writeVarInt(patch.getKey().getId(this.serverVersion.toClientVersion()));
-            }
-        }
+    public void writeItemStackModern(ItemStack stack) {
+        ItemStackSerialization.writeModern(this, stack);
     }
 
     public void writePresentItemStack(ItemStack itemStack) {
@@ -575,38 +505,8 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
         this.writeItemStack(itemStack);
     }
 
-    public void writeItemStack(ItemStack itemStack) {
-        if (itemStack == null) {
-            itemStack = ItemStack.EMPTY;
-        }
-
-        if (this.serverVersion.isNewerThanOrEquals(ServerVersion.V_1_20_5)) {
-            this.writeItemStackModern(itemStack);
-            return;
-        }
-
-        boolean v1_13_2 = serverVersion.isNewerThanOrEquals(ServerVersion.V_1_13_2);
-        if (v1_13_2) {
-            if (itemStack.isEmpty()) {
-                writeBoolean(false);
-            } else {
-                writeBoolean(true);
-                int typeID = itemStack.getType().getId(serverVersion.toClientVersion());
-                writeVarInt(typeID);
-                writeByte(itemStack.getAmount());
-                writeNBT(itemStack.getNBT());
-            }
-        } else {
-            if (itemStack.isEmpty()) {
-                writeShort(-1);
-            } else {
-                int typeID = itemStack.getType().getId(serverVersion.toClientVersion());
-                writeShort(typeID);
-                writeByte(itemStack.getAmount());
-                writeShort(itemStack.getLegacyData());
-                writeNBT(itemStack.getNBT());
-            }
-        }
+    public void writeItemStack(ItemStack stack) {
+        ItemStackSerialization.write(this, stack);
     }
 
     public NBTCompound readNBT() {
@@ -658,7 +558,7 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
     @Deprecated
     public String readComponentJSON() {
         // needs to be converted to nbt as of 1.20.3
-        return AdventureSerializer.asVanilla(this.readComponent());
+        return this.getSerializers().asJson(this.readComponent());
     }
 
     public void writeString(String s) {
@@ -682,10 +582,14 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
         }
     }
 
+    public AdventureSerializer getSerializers() {
+        return AdventureSerializer.serializer(this);
+    }
+
     @Deprecated
     public void writeComponentJSON(String json) {
         // needs to be converted to nbt as of 1.20.3
-        this.writeComponent(AdventureSerializer.parseComponent(json));
+        this.writeComponent(this.getSerializers().fromJson(json));
     }
 
     public Component readComponent() {
@@ -694,12 +598,12 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
     }
 
     public Component readComponentAsNBT() {
-        return AdventureSerializer.fromNbt(readNBTRaw());
+        return this.getSerializers().fromNbtTag(this.readNBTRaw(), this);
     }
 
     public Component readComponentAsJSON() {
         String jsonString = this.readString(this.getMaxMessageLength());
-        return AdventureSerializer.parseComponent(jsonString);
+        return this.getSerializers().fromJson(jsonString);
     }
 
     public void writeComponent(Component component) {
@@ -711,20 +615,20 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
     }
 
     public void writeComponentAsNBT(Component component) {
-        writeNBTRaw(AdventureSerializer.toNbt(component));
+        this.writeNBTRaw(this.getSerializers().asNbtTag(component, this));
     }
 
     public void writeComponentAsJSON(Component component) {
-        String jsonString = AdventureSerializer.toJson(component);
+        String jsonString = this.getSerializers().asJson(component);
         this.writeString(jsonString, this.getMaxMessageLength());
     }
 
     public Style readStyle() {
-        return AdventureSerializer.getNBTSerializer().deserializeStyle(readNBT());
+        return this.getSerializers().nbt().deserializeStyle(this.readNBT(), this);
     }
 
     public void writeStyle(Style style) {
-        writeNBT(AdventureSerializer.getNBTSerializer().serializeStyle(style));
+        this.writeNBT(this.getSerializers().nbt().serializeStyle(style, this));
     }
 
     public ResourceLocation readIdentifier(int maxLen) {
@@ -956,8 +860,9 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
         writeByte(id);
     }
 
-    public List<EntityData> readEntityMetadata() {
-        List<EntityData> list = new ArrayList<>();
+    @SuppressWarnings("unchecked")
+    public List<EntityData<?>> readEntityMetadata() {
+        List<EntityData<?>> list = new ArrayList<>();
         if (serverVersion.isNewerThanOrEquals(ServerVersion.V_1_9)) {
             boolean v1_10 = serverVersion.isNewerThanOrEquals(ServerVersion.V_1_10);
             short index;
@@ -967,45 +872,44 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
                 if (type == null) {
                     throw new IllegalStateException("Unknown entity metadata type id: " + typeID + " version " + serverVersion.toClientVersion());
                 }
-                Object value = type.getDataDeserializer().apply(this);
-                list.add(new EntityData(index, type, value));
+                list.add(new EntityData<>(index, (EntityDataType<Object>) type, type.read(this)));
             }
         } else {
             for (byte data = readByte(); data != Byte.MAX_VALUE; data = readByte()) {
                 int typeID = (data & 0xE0) >> 5;
                 int index = data & 0x1F;
                 EntityDataType<?> type = EntityDataTypes.getById(serverVersion.toClientVersion(), typeID);
-                Object value = type.getDataDeserializer().apply(this);
-                EntityData entityData = new EntityData(index, type, value);
+                EntityData<?> entityData = new EntityData<>(index, (EntityDataType<Object>) type, type.read(this));
                 list.add(entityData);
             }
         }
         return list;
     }
 
-    public void writeEntityMetadata(List<EntityData> list) {
+    @SuppressWarnings("unchecked")
+    public void writeEntityMetadata(List<EntityData<?>> list) {
         if (list == null) {
             list = new ArrayList<>();
         }
         if (serverVersion.isNewerThanOrEquals(ServerVersion.V_1_9)) {
             boolean v1_10 = serverVersion.isNewerThanOrEquals(ServerVersion.V_1_10);
-            for (EntityData entityData : list) {
+            for (EntityData<?> entityData : list) {
                 writeByte(entityData.getIndex());
                 if (v1_10) {
                     writeVarInt(entityData.getType().getId(serverVersion.toClientVersion()));
                 } else {
                     writeByte(entityData.getType().getId(serverVersion.toClientVersion()));
                 }
-                entityData.getType().getDataSerializer().accept(this, entityData.getValue());
+                ((EntityDataType<Object>) entityData.getType()).write(this, entityData.getValue());
             }
             writeByte(255); // End of metadata array
         } else {
-            for (EntityData entityData : list) {
+            for (EntityData<?> entityData : list) {
                 int typeID = entityData.getType().getId(serverVersion.toClientVersion());
                 int index = entityData.getIndex();
                 int data = (typeID << 5 | index & 31) & 255;
                 writeByte(data);
-                entityData.getType().getDataSerializer().accept(this, entityData.getValue());
+                ((EntityDataType<Object>) entityData.getType()).write(this, entityData.getValue());
             }
             writeByte(127); // End of metadata array
         }
@@ -1151,15 +1055,18 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
     }
 
     public LastSeenMessages.Update readLastSeenMessagesUpdate() {
-        int signedMessages = readVarInt();
-        BitSet seen = BitSet.valueOf(readBytes(3));
-        return new LastSeenMessages.Update(signedMessages, seen);
+        int signedMessages = this.readVarInt();
+        BitSet seen = BitSet.valueOf(this.readBytes(3));
+        byte checksum = this.serverVersion.isNewerThanOrEquals(ServerVersion.V_1_21_5) ? this.readByte() : (byte) 0;
+        return new LastSeenMessages.Update(signedMessages, seen, checksum);
     }
 
     public void writeLastSeenMessagesUpdate(LastSeenMessages.Update update) {
-        writeVarInt(update.getOffset());
-        byte[] lastSeen = Arrays.copyOf(update.getAcknowledged().toByteArray(), 3);
-        writeBytes(lastSeen);
+        this.writeVarInt(update.getOffset());
+        this.writeBytes(Arrays.copyOf(update.getAcknowledged().toByteArray(), 3));
+        if (this.serverVersion.isNewerThanOrEquals(ServerVersion.V_1_21_5)) {
+            this.writeByte(update.getChecksum());
+        }
     }
 
     public LastSeenMessages.LegacyUpdate readLegacyLastSeenMessagesUpdate() {
@@ -1434,6 +1341,18 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
         }
     }
 
+    public <R> Optional<R> readJavaOptional(Reader<R> reader) {
+        return this.readBoolean() ? Optional.of(reader.apply(this)) : Optional.empty();
+    }
+
+    public <V> void writeJavaOptional(Optional<V> value, Writer<V> writer) {
+        if (value.isPresent()) {
+            this.writeBoolean(true);
+            writer.accept(this, value.get());
+        } else {
+            this.writeBoolean(false);
+        }
+    }
 
     public <K, C extends Collection<K>> C readCollection(IntFunction<C> function, Reader<K> reader) {
         int size = this.readVarInt();
@@ -1500,6 +1419,10 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
         return entity;
     }
 
+    public <Z extends MappedEntity> IRegistry<Z> replaceRegistry(IRegistry<Z> registry) {
+        return this.getRegistryHolder().getRegistryOr(registry, this.serverVersion.toClientVersion());
+    }
+
     public IRegistryHolder getRegistryHolder() {
         // workaround to make packet wrappers work without user context on spigot/fabric servers
         // this will not work for bungee or velocity, as we need to have some reference to get
@@ -1521,12 +1444,12 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
     }
 
     public <Z extends MappedEntity> Z readMappedEntity(IRegistry<Z> registry) {
-        IRegistry<Z> replacedRegistry = this.getRegistryHolder().getRegistryOr(registry);
+        IRegistry<Z> replacedRegistry = this.getRegistryHolder().getRegistryOr(registry, this.serverVersion.toClientVersion());
         return this.readMappedEntity((BiFunction<ClientVersion, Integer, Z>) replacedRegistry);
     }
 
     public <Z extends MappedEntity> Z readMappedEntityOrDirect(IRegistry<Z> registry, Reader<Z> directReader) {
-        IRegistry<Z> replacedRegistry = this.getRegistryHolder().getRegistryOr(registry);
+        IRegistry<Z> replacedRegistry = this.getRegistryHolder().getRegistryOr(registry, this.serverVersion.toClientVersion());
         return this.readMappedEntityOrDirect((BiFunction<ClientVersion, Integer, Z>) replacedRegistry, directReader);
     }
 
@@ -1563,6 +1486,22 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
         }
     }
 
+    public <L, R> Either<L, R> readEither(Reader<L> leftReader, Reader<R> rightReader) {
+        return this.readBoolean()
+                ? Either.createLeft(leftReader.apply(this))
+                : Either.createRight(rightReader.apply(this));
+    }
+
+    public <L, R> void writeEither(Either<L, R> either, Writer<L> leftWriter, Writer<R> rightWriter) {
+        if (either.isLeft()) {
+            this.writeBoolean(true);
+            leftWriter.accept(this, either.getLeft());
+        } else {
+            this.writeBoolean(false);
+            rightWriter.accept(this, either.getRight());
+        }
+    }
+
     public void writeRotation(float rotation) {
         this.writeByte((byte) MathUtil.floor(rotation * 256f / 360f));
     }
@@ -1578,6 +1517,36 @@ public class PacketWrapper<T extends PacketWrapper<T>> {
 
     public void writeNullableVarInt(@Nullable Integer i) {
         this.writeVarInt(i == null ? 0 : i + 1);
+    }
+
+    public <Z> Z readLengthPrefixed(int maxLength, Reader<Z> reader) {
+        int length = this.readVarInt();
+        if (length > maxLength) {
+            throw new RuntimeException("Buffer size " + length + " is larger than allowed limit of " + maxLength);
+        }
+        Object prevBuffer = this.buffer;
+        try {
+            // temporarily replace wrapped buffer with slice
+            this.buffer = ByteBufHelper.readSlice(prevBuffer, length);
+            return reader.apply(this);
+        } finally {
+            this.buffer = prevBuffer;
+        }
+    }
+
+    public <Z> void writeLengthPrefixed(Z value, Writer<Z> writer) {
+        Object payloadBuffer = ByteBufHelper.allocateNewBuffer(this.buffer);
+        Object prevBuffer = this.buffer;
+        try {
+            // temporarily replace wrapped buffer with payload buffer
+            this.buffer = payloadBuffer;
+            writer.accept(this, value);
+        } finally {
+            this.buffer = prevBuffer;
+        }
+        // write length to real buffer copy payload afterwards
+        this.writeVarInt(ByteBufHelper.readableBytes(payloadBuffer));
+        ByteBufHelper.writeBytes(prevBuffer, payloadBuffer);
     }
 
     @FunctionalInterface

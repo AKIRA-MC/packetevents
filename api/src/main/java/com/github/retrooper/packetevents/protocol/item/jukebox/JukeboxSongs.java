@@ -29,9 +29,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-public class JukeboxSongs {
-    private static final VersionedRegistry<IJukeboxSong> REGISTRY = new VersionedRegistry<>("jukebox_song",
-            "item/item_jukebox_song_mappings");
+public final class JukeboxSongs {
+
+    private static final VersionedRegistry<IJukeboxSong> REGISTRY = new VersionedRegistry<>("jukebox_song");
 
     private JukeboxSongs() {
     }
@@ -80,6 +80,12 @@ public class JukeboxSongs {
     public static final IJukeboxSong CREATOR = define("creator", Sounds.MUSIC_DISC_CREATOR, 176, 12);
     public static final IJukeboxSong CREATOR_MUSIC_BOX = define("creator_music_box", Sounds.MUSIC_DISC_CREATOR_MUSIC_BOX,
             73, 11);
+
+    /**
+     * Added with 1.21.6
+     */
+    public static final IJukeboxSong TEARS = define("tears", Sounds.MUSIC_DISC_TEARS,
+            175, 10);
 
     /**
      * Returns an immutable view of the jukebox songs.

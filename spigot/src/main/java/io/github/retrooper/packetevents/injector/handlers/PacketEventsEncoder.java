@@ -20,16 +20,12 @@ package io.github.retrooper.packetevents.injector.handlers;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
-import com.github.retrooper.packetevents.exception.CancelPacketException;
 import com.github.retrooper.packetevents.exception.InvalidDisconnectPacketSend;
 import com.github.retrooper.packetevents.exception.PacketProcessException;
-import com.github.retrooper.packetevents.netty.buffer.ByteBufHelper;
 import com.github.retrooper.packetevents.protocol.ConnectionState;
 import com.github.retrooper.packetevents.protocol.player.User;
-import com.github.retrooper.packetevents.util.EventCreationUtil;
 import com.github.retrooper.packetevents.util.ExceptionUtil;
 import com.github.retrooper.packetevents.util.PacketEventsImplHelper;
-import com.github.retrooper.packetevents.wrapper.PacketWrapper;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDisconnect;
 import io.github.retrooper.packetevents.injector.connection.ServerConnectionInitializer;
 import io.github.retrooper.packetevents.util.SpigotReflectionUtil;
@@ -39,17 +35,32 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.ChannelPromise;
-import io.netty.handler.codec.MessageToMessageEncoder;
+import io.netty.util.ReferenceCountUtil;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 
-public class PacketEventsEncoder extends MessageToMessageEncoder<ByteBuf> {
+public class PacketEventsEncoder extends ChannelOutboundHandlerAdapter {
+
+    private static final boolean NETTY_4_1_0;
+
+    static {
+        // ancient Minecraft versions don't support this api
+        // https://howoldisminecraft188.today/
+        boolean netty410 = false;
+        try {
+            ChannelPromise.class.getDeclaredMethod("unvoid");
+            netty410 = true;
+        } catch (NoSuchMethodException ignored) {
+        }
+        NETTY_4_1_0 = netty410;
+    }
+
     public User user;
     public Player player;
     private boolean handledCompression = COMPRESSION_ENABLED_EVENT != null;
@@ -65,23 +76,6 @@ public class PacketEventsEncoder extends MessageToMessageEncoder<ByteBuf> {
         player = ((PacketEventsEncoder) encoder).player;
         handledCompression = ((PacketEventsEncoder) encoder).handledCompression;
         promise = ((PacketEventsEncoder) encoder).promise;
-    }
-
-    @Override
-    protected void encode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> list) throws Exception {
-        boolean needsRecompression = !handledCompression && handleCompression(ctx, byteBuf);
-        handleClientBoundPacket(ctx.channel(), user, player, byteBuf, this.promise);
-
-        if (needsRecompression) {
-            compress(ctx, byteBuf);
-        }
-
-        // So apparently, this is how ViaVersion hacks around bungeecord not supporting sending empty packets
-        if (!ByteBufHelper.isReadable(byteBuf)) {
-            throw CancelPacketException.INSTANCE;
-        }
-
-        list.add(byteBuf.retain());
     }
 
     private @Nullable PacketSendEvent handleClientBoundPacket(Channel channel, User user, Object player, ByteBuf buffer, ChannelPromise promise) throws Exception {
@@ -101,19 +95,35 @@ public class PacketEventsEncoder extends MessageToMessageEncoder<ByteBuf> {
         // We must restore the old promise (in case we are stacking promises such as sending packets on send event)
         // If the old promise was successful, set it to null to avoid memory leaks.
         ChannelPromise oldPromise = this.promise != null && !this.promise.isSuccess() ? this.promise : null;
+        if (NETTY_4_1_0) {
+            // "unvoid" will just make sure we can actually add listeners to this promise...
+            // since 1.21.6, mojang will give us void promises as they don't care about the result
+            promise = promise.unvoid();
+        }
         promise.addListener(p -> this.promise = oldPromise);
-
         this.promise = promise;
-        super.write(ctx, msg, promise);
-    }
 
+        if (msg instanceof ByteBuf) {
+            boolean needsRecompression = !this.handledCompression && this.handleCompression(ctx, (ByteBuf) msg);
+            this.handleClientBoundPacket(ctx.channel(), this.user, this.player, (ByteBuf) msg, this.promise);
+
+            // check if the packet got cancelled
+            if (!((ByteBuf) msg).isReadable()) {
+                ReferenceCountUtil.release(msg);
+                promise.trySuccess(); // TODO how to properly handle this?
+                return; // abort handling
+            }
+
+            if (needsRecompression) {
+                this.compress(ctx, (ByteBuf) msg);
+            }
+        }
+
+        ctx.write(msg, promise);
+    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        // This is a terrible hack (to support bungee), I think we should use something other than a MessageToMessageEncoder
-        if (ExceptionUtil.isException(cause, CancelPacketException.class)) {
-            return;
-        }
         // Ignore how mojang sends DISCONNECT packets in the wrong state
         if (ExceptionUtil.isException(cause, InvalidDisconnectPacketSend.class)) {
             return;
@@ -143,9 +153,10 @@ public class PacketEventsEncoder extends MessageToMessageEncoder<ByteBuf> {
                     FoliaScheduler.getEntityScheduler().runDelayed(player, (Plugin) PacketEvents.getAPI().getPlugin(), (o) -> player.kickPlayer("Invalid packet"), null, 1);
                 }
 
-                if (user != null) {
-                    PacketEvents.getAPI().getLogManager().warn("Disconnected " + user.getProfile().getName() + " due to invalid packet!");
-                }}
+                if (user != null && user.getProfile().getName() != null) {
+                    PacketEvents.getAPI().getLogManager().warn("Disconnected " + user.getProfile().getName() + " due to an invalid packet!");
+                }
+            }
         }
 
         super.exceptionCaught(ctx, cause);
